@@ -4,6 +4,7 @@ namespace SilverStripe\Admin;
 
 use SilverStripe\Admin\Forms\EditorEmailLinkFormFactory;
 use SilverStripe\Admin\Forms\EditorExternalLinkFormFactory;
+use SilverStripe\Admin\Forms\EditorNumberLinkFormFactory;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\RequestHandler;
 use SilverStripe\Dev\Deprecation;
@@ -17,6 +18,7 @@ class ModalController extends RequestHandler
     private static $allowed_actions = [
         'EditorExternalLink',
         'EditorEmailLink',
+        'EditorNumberLink',
     ];
 
     public function Link($action = null)
@@ -96,7 +98,7 @@ class ModalController extends RequestHandler
     }
 
     /**
-     * Builds and returns the external link form
+     * Builds and returns the email link form
      *
      * @return Form
      * @deprecated 2.4.0 Will be replaced with linkModalForm() in a future major release
@@ -110,6 +112,23 @@ class ModalController extends RequestHandler
         return $factory->getForm(
             $this->controller,
             "{$this->name}/EditorEmailLink",
+            [ 'RequireLinkText' => isset($showLinkText) ]
+        );
+    }
+
+    /**
+     * Builds and returns the number link form
+     *
+     * @return Form
+     */
+    public function EditorNumberLink()
+    {
+        // Show link text field if requested
+        $showLinkText = $this->controller->getRequest()->getVar('requireLinkText');
+        $factory = EditorNumberLinkFormFactory::singleton();
+        return $factory->getForm(
+            $this->controller,
+            "{$this->name}/EditorNumberLink",
             [ 'RequireLinkText' => isset($showLinkText) ]
         );
     }

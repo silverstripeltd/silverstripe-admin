@@ -53,6 +53,7 @@ const config = [
       TinyMCE_sslink: `${PATHS.LEGACY_SRC}/TinyMCE_sslink.js`,
       'TinyMCE_sslink-external': `${PATHS.LEGACY_SRC}/TinyMCE_sslink-external.js`,
       'TinyMCE_sslink-email': `${PATHS.LEGACY_SRC}/TinyMCE_sslink-email.js`,
+      'TinyMCE_sslink-number': `${PATHS.LEGACY_SRC}/TinyMCE_sslink-number.js`,
     })
     .mergeConfig({
       watchOptions: {
