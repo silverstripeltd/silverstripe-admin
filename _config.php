@@ -21,6 +21,7 @@ $editorConfig
         'sslink' => $module->getResource('client/dist/js/TinyMCE_sslink.js'),
         'sslinkexternal' => $module->getResource('client/dist/js/TinyMCE_sslink-external.js'),
         'sslinkemail' => $module->getResource('client/dist/js/TinyMCE_sslink-email.js'),
+        'sslinknumber' => $module->getResource('client/dist/js/TinyMCE_sslink-number.js'),
     ])
     ->setOptions([
         'friendly_name' => 'Default CMS',
