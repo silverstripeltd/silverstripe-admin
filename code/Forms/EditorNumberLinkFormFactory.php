@@ -3,6 +3,7 @@
 namespace SilverStripe\Admin\Forms;
 
 use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\NumericField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\RequiredFields;
 
@@ -11,7 +12,7 @@ class EditorNumberLinkFormFactory extends LinkFormFactory
     protected function getFormFields($controller, $name, $context)
     {
         $fields = FieldList::create([
-            TextField::create(
+            NumericField::create(
                 'Link',
                 _t(__CLASS__.'.NUMBER', 'Phone number')
             ),
