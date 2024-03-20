@@ -87,7 +87,7 @@ jQuery.entwine('ss', ($) => {
 
       let number = hrefParts[0].replace(/^tel:/, '').split('?')[0];
       // simple valid regex check if is a number
-      if (!number.match('/^[0-9]+$/')) {
+      if (!number.match(/^[0-9]+$/)) {
         number = '';
       }
 
@@ -103,7 +103,7 @@ jQuery.entwine('ss', ($) => {
 
       let number = attributes.href.replace(/^tel:/, '').split('?')[0];
       // simple valid regex check if is a number
-      if (!number.match('/^[0-9]+$/')) {
+      if (!number.match(/^[0-9]+$/)) {
         number = '';
       }
 
