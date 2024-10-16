@@ -91,11 +91,8 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
      *
      * Determines what is managed in this interface, through
      * {@link getEditForm()} and other logic.
-     *
-     * @config
-     * @var string
      */
-    private static $model_class = null;
+    private static ?string $model_class = null;
 
     /**
      * @var array
@@ -116,12 +113,9 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
     ];
 
     /**
-     * Current pageID for this request
-     *
-     * @var null
-     * @deprecated 2.4.0 Will be renamed to recordID.
+     * Current record ID for this request
      */
-    protected $pageID = null;
+    protected $recordID = null;
 
     /**
      * Set by {@link LeftAndMainErrorExtension} if an http error occurs
@@ -771,14 +765,22 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
     }
 
     /**
+     * Get the class of the model which is managed by this controller.
+     * @return class-string<DataObject>
+     */
+    public function getModelClass(): string
+    {
+        return static::config()->get('model_class') ?? '';
+    }
+
+    /**
      * Get dataobject from the current ID
      *
      * @param int|DataObject $id ID or object
-     * @return DataObject
      */
-    public function getRecord($id)
+    public function getRecord($id): ?DataObject
     {
-        $className = $this->config()->get('model_class');
+        $className = $this->getModelClass();
         if (!$className) {
             return null;
         }
@@ -844,7 +846,7 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
     public function save(array $data, Form $form): HTTPResponse
     {
         $request = $this->getRequest();
-        $className = $this->config()->get('model_class');
+        $className = $this->getModelClass();
 
         // Existing or new record?
         $id = $data['ID'];
@@ -857,7 +859,7 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
                 $this->httpError(404, "Bad record ID #" . (int)$id);
             }
         } else {
-            if (!singleton($this->config()->get('model_class'))->canCreate()) {
+            if (!DataObject::singleton($className)->canCreate()) {
                 return Security::permissionFailure($this);
             }
             $record = $this->getNewItem($id, false);
@@ -893,7 +895,7 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
      */
     public function getNewItem($id, $setID = true)
     {
-        $class = $this->config()->get('model_class');
+        $class = $this->getModelClass();
         $object = Injector::inst()->create($class);
         if ($setID) {
             $object->ID = $id;
@@ -903,7 +905,7 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
 
     public function delete(array $data, Form $form): HTTPResponse
     {
-        $className = $this->config()->get('model_class');
+        $className = $this->getModelClass();
 
         $id = $data['ID'];
         $record = DataObject::get_by_id($className, $id);
@@ -933,9 +935,9 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
      *
      * This is a "pseudo-abstract" method, usually connected to a {@link getEditForm()}
      * method in an entwine subclass. This method can accept a record identifier,
-     * selected either in custom logic, or through {@link currentPageID()}.
+     * selected either in custom logic, or through {@link currentRecordID()}.
      * The form usually construct itself from {@link DataObject->getCMSFields()}
-     * for the specific managed subclass defined in {@link LeftAndMain::$model_class}.
+     * for the specific managed subclass defined in {@link LeftAndMain::getModelClass()}.
      *
      * @param HTTPRequest $request Passed if executing a HTTPRequest directly on the form.
      * If empty, this is invoked as $EditForm in the template
@@ -988,7 +990,7 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
             $fields->push(new HiddenField('ClassName'));
         }
 
-        $modelClass = $this->config()->get('model_class');
+        $modelClass = $this->getModelClass();
         if ($modelClass::has_extension(Hierarchy::class)
             && !$fields->dataFieldByName('ParentID')
         ) {
@@ -1142,7 +1144,7 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
      */
     public function batchactions()
     {
-        return new CMSBatchActionHandler($this, 'batchactions', $this->config()->get('model_class'));
+        return new CMSBatchActionHandler($this, 'batchactions', $this->getModelClass());
     }
 
     /**
@@ -1225,66 +1227,24 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
      * sources (in this order):
      * - GET/POST parameter named 'ID'
      * - URL parameter named 'ID'
-     * - Session value namespaced by classname, e.g. "CMSMain.currentPage"
-     *
-     * @return int
-     * @deprecated 5.4.0 use currentRecordID() instead.
-     */
-    public function currentPageID()
-    {
-        Deprecation::notice('5.4.0', 'use currentRecordID() instead.');
-        return $this->currentRecordID();
-    }
-
-    /**
-     * Identifier for the currently shown record,
-     * in most cases a database ID. Inspects the following
-     * sources (in this order):
-     * - GET/POST parameter named 'ID'
-     * - URL parameter named 'ID'
-     * - Session value namespaced by classname, e.g. "CMSMain.currentPage"
      */
     public function currentRecordID(): ?int
     {
-        if ($this->pageID) {
-            return $this->pageID;
-        }
-        if ($this->getRequest()->requestVar('ID') && is_numeric($this->getRequest()->requestVar('ID'))) {
-            return (int) $this->getRequest()->requestVar('ID');
-        }
-
-        if ($this->getRequest()->requestVar('CMSMainCurrentPageID') && is_numeric($this->getRequest()->requestVar('CMSMainCurrentPageID'))) {
+        $id = null;
+        if ($this->recordID) {
+            $id = $this->recordID;
+        } elseif ($this->getRequest()->requestVar('ID') && is_numeric($this->getRequest()->requestVar('ID'))) {
+            $id = (int) $this->getRequest()->requestVar('ID');
+        } elseif ($this->getRequest()->requestVar('CMSMainCurrentRecordID') && is_numeric($this->getRequest()->requestVar('CMSMainCurrentRecordID'))) {
             // see GridFieldDetailForm::ItemEditForm
-            return (int) $this->getRequest()->requestVar('CMSMainCurrentPageID');
+            $id = (int) $this->getRequest()->requestVar('CMSMainCurrentRecordID');
+        } elseif (isset($this->urlParams['ID']) && is_numeric($this->urlParams['ID'])) {
+            $id = (int) $this->urlParams['ID'];
+        } elseif (is_numeric($this->getRequest()->param('ID'))) {
+            $id = (int) $this->getRequest()->param('ID');
         }
-
-        if (isset($this->urlParams['ID']) && is_numeric($this->urlParams['ID'])) {
-            return (int) $this->urlParams['ID'];
-        }
-
-        if (is_numeric($this->getRequest()->param('ID'))) {
-            return (int) $this->getRequest()->param('ID');
-        }
-
-        // Using session for this is deprecated - see https://github.com/silverstripe/silverstripe-admin/pull/19
-        $session = $this->getRequest()->getSession();
-        return $session->get($this->sessionNamespace() . ".currentPage") ?: null;
-    }
-
-    /**
-     * Forces the current page to be set in session,
-     * which can be retrieved later through {@link currentPageID()}.
-     * Keep in mind that setting an ID through GET/POST or
-     * as a URL parameter will overrule this value.
-     *
-     * @param int $id
-     * @deprecated 5.4.0 use setCurrentRecordID() instead.
-     */
-    public function setCurrentPageID($id)
-    {
-        Deprecation::notice('5.4.0', 'use setCurrentRecordID() instead.');
-        $id = (int)$id;
-        $this->setCurrentRecordID($id);
+        $this->extend('updateCurrentRecordID', $id);
+        return $id;
     }
 
     /**
@@ -1293,22 +1253,7 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
      */
     public function setCurrentRecordID(?int $id): void
     {
-        $this->pageID = $id;
-        // Setting session for this is deprecated - see https://github.com/silverstripe/silverstripe-admin/pull/19
-        $this->getRequest()->getSession()->set($this->sessionNamespace() . ".currentPage", $id);
-    }
-
-    /**
-     * Uses {@link getRecord()} and {@link currentPageID()}
-     * to get the currently selected record.
-     *
-     * @return DataObject
-     * @deprecated 5.4.0 use currentRecord() instead.
-     */
-    public function currentPage()
-    {
-        Deprecation::notice('5.4.0', 'use currentRecord() instead.');
-        return $this->currentRecord();
+        $this->recordID = $id;
     }
 
     /**
@@ -1318,19 +1263,6 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
     public function currentRecord(): ?DataObject
     {
         return $this->getRecord($this->currentRecordID());
-    }
-
-    /**
-     * Compares a given record to the currently selected one (if any).
-     * Used for marking the current tree node.
-     *
-     * @return bool
-     * @deprecated 5.4.0 use isCurrentRecord() instead.
-     */
-    public function isCurrentPage(DataObject $record)
-    {
-        Deprecation::notice('5.4.0', 'use isCurrentRecord() instead.');
-        return $this->isCurrentRecord($record);
     }
 
     /**
