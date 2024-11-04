@@ -116,8 +116,7 @@ class LeftAndMain extends Controller implements PermissionProvider
     private static $url_priority = 50;
 
     /**
-     * @config
-     * @var string
+     * Set this to false not display the menu item 
      */
     private static bool $ignore_menuitem = false;
 
