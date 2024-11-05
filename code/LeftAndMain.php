@@ -98,6 +98,7 @@ class LeftAndMain extends AdminController implements PermissionProvider
      *
      * @config
      * @var string
+     * @deprecated 5.4.0 Will be renamed to model_class
      */
     private static $tree_class = null;
 
