@@ -116,7 +116,7 @@ class LeftAndMain extends Controller implements PermissionProvider
     private static $url_priority = 50;
 
     /**
-     * Set this to true not display the menu item 
+     * When set to true, this controller isn't given a menu item in the left panel in the CMS. 
      */
     private static bool $ignore_menuitem = false;
 
