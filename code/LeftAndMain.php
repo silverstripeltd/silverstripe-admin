@@ -116,6 +116,11 @@ class LeftAndMain extends Controller implements PermissionProvider
     private static $url_priority = 50;
 
     /**
+     * When set to true, this controller isn't given a menu item in the left panel in the CMS.
+     */
+    private static bool $ignore_menuitem = false;
+
+    /**
      * A subclass of {@link DataObject}.
      *
      * Determines what is managed in this interface, through
