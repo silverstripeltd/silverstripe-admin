@@ -18,12 +18,12 @@ Feature: Form validation
     And I fill in "Email" with "invalid email"
     And I press the "Create" button
     Then I should not see "Saved Employee"
-    And I should see "Please enter an email address"
+    And I should see "Invalid email address"
 
     When I fill in "Email" with "email@example.com"
     And I press the "Create" button
     Then I should see "Saved Employee"
-    And I should not see "Please enter an email address"
+    And I should not see "Invalid email address"
 
   Scenario: Validation in GridField highlights the tab where the error is
     Given I go to "/admin/test/SilverStripe-FrameworkTest-Model-Company"
