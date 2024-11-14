@@ -19,6 +19,7 @@ use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Manifest\ModuleResourceLoader;
 use SilverStripe\Core\Manifest\VersionProvider;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\Dev\TestOnly;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
@@ -91,6 +92,11 @@ class LeftAndMain extends AdminController implements PermissionProvider
     private static $menu_priority = 0;
 
     /**
+     * When set to true, this controller isn't given a menu item in the left panel in the CMS.
+     */
+    private static bool $ignore_menuitem = false;
+
+    /**
      * A subclass of {@link DataObject}.
      *
      * Determines what is managed in this interface, through
@@ -98,7 +104,7 @@ class LeftAndMain extends AdminController implements PermissionProvider
      *
      * @config
      * @var string
-     * @deprecated 5.4.0 Will be renamed to model_class
+     * @deprecated 2.4.0 Will be renamed to model_class
      */
     private static $model_class = null;
 
@@ -400,6 +406,7 @@ class LeftAndMain extends AdminController implements PermissionProvider
      */
     public function methodSchema(HTTPRequest $request): HTTPResponse
     {
+        Deprecation::noticeWithNoReplacment('2.4.0', 'Will be replaced with SilverStripe\Admin\FormSchemaController::schema()');
         $method = $request->param('Method');
         $formName = $request->param('FormName');
         $itemID = $request->param('ItemID');
@@ -1258,9 +1265,11 @@ class LeftAndMain extends AdminController implements PermissionProvider
      * Handler for all global modals
      *
      * @return ModalController
+     * @deprecated 2.4.0 Will be removed without equivalent functionality to replace it
      */
     public function Modals()
     {
+        Deprecation::noticeWithNoReplacment('2.4.0');
         return ModalController::create($this, "Modals");
     }
 
