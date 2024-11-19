@@ -774,6 +774,7 @@ class TreeDropdownField extends Component {
           classNames={{
             option: () => 'fill-width',
           }}
+          isOptionDisabled={(option) => option.disabled}
         />
       </EmotionCssCacheProvider>
     );
