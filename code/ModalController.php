@@ -22,9 +22,13 @@ class ModalController extends FormSchemaController
 
     /**
      * Builds and returns the external link form
+     *
+     * @return Form
+     * @deprecated 2.4.0 Will be replaced with linkModalForm()
      */
     public function EditorExternalLink(): Form
     {
+        Deprecation::noticeWithNoReplacment('2.4.0', 'Will be replaced with linkModalForm()');
         // Show link text field if requested
         $showLinkText = $this->getRequest()->getVar('requireLinkText');
         $factory = EditorExternalLinkFormFactory::singleton();
@@ -37,9 +41,13 @@ class ModalController extends FormSchemaController
 
     /**
      * Builds and returns the external link form
+     *
+     * @return Form
+     * @deprecated 2.4.0 Will be replaced with linkModalForm()
      */
     public function EditorEmailLink(): Form
     {
+        Deprecation::noticeWithNoReplacment('2.4.0', 'Will be replaced with linkModalForm()');
         // Show link text field if requested
         $showLinkText = $this->getRequest()->getVar('requireLinkText');
         $factory = EditorEmailLinkFormFactory::singleton();
