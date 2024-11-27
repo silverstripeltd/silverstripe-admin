@@ -10,6 +10,7 @@ use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\Form;
+use SilverStripe\Dev\Deprecation;
 
 /**
  * Parent controller for all CMS-global modals
