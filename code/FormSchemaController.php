@@ -111,7 +111,7 @@ abstract class FormSchemaController extends AdminController
      * @param ValidationResult $errors Required for 'error' response
      * @param array $extraData Any extra data to be merged with the schema response
      */
-    public function getSchemaResponse(string $schemaID, ?Form $form = null, ValidationResult $errors = null, array $extraData = []): HTTPResponse
+    public function getSchemaResponse(string $schemaID, ?Form $form = null, ?ValidationResult $errors = null, array $extraData = []): HTTPResponse
     {
         $parts = $this->getRequest()->getHeader(static::SCHEMA_HEADER);
         $data = $this

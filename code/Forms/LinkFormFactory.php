@@ -27,7 +27,7 @@ abstract class LinkFormFactory implements FormFactory
      * @param array $context
      * @return Form
      */
-    public function getForm(RequestHandler $controller = null, $name = FormFactory::DEFAULT_NAME, $context = [])
+    public function getForm(?RequestHandler $controller = null, $name = FormFactory::DEFAULT_NAME, $context = [])
     {
         // Validate context
         foreach ($this->getRequiredContext() as $required) {
