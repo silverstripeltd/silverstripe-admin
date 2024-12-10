@@ -5,7 +5,7 @@ namespace SilverStripe\Admin\Forms;
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\TextField;
-use SilverStripe\Forms\RequiredFields;
+use SilverStripe\Forms\Validation\RequiredFieldsValidator;
 
 class EditorExternalLinkFormFactory extends LinkFormFactory
 {
@@ -36,7 +36,7 @@ class EditorExternalLinkFormFactory extends LinkFormFactory
     protected function getValidator($controller, $name, $context)
     {
         if ($context['RequireLinkText']) {
-            return RequiredFields::create('Text');
+            return RequiredFieldsValidator::create('Text');
         }
 
         return null;
