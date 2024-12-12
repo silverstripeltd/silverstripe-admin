@@ -19,7 +19,7 @@ interface LeftAndMain_SearchFilter
     public function getChildrenMethod();
 
     /**
-     * Method on {@link Hierarchy} objects which is used find the number of children for a parent page
+     * Method on {@link Hierarchy} objects which is used find the number of children for a parent record
      *
      * @return string
      */
@@ -27,21 +27,19 @@ interface LeftAndMain_SearchFilter
 
 
     /**
-     * Returns TRUE if the given page should be included in the tree.
-     * Caution: Does NOT check view permissions on the page.
+     * Returns TRUE if the given record should be included in the tree.
+     * Caution: Does NOT check view permissions on the record.
      *
-     * @param DataObject $page
+     * @param DataObject $record
      * @return bool
-     * @deprecated 5.4.0 will be renamed to isRecordIncluded().
      */
-    public function isPageIncluded($page);
+    public function isRecordIncluded($page);
 
     /**
-     * Given a page, determine any additional CSS classes to apply to the tree node
+     * Given a record, determine any additional CSS classes to apply to the tree node
      *
-     * @param DataObject $page
+     * @param DataObject $record
      * @return array|string
-     * @deprecated 5.4.0 will be renamed to getRecordClasses().
      */
-    public function getPageClasses($page);
+    public function getRecordClasses($record);
 }
