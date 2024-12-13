@@ -379,7 +379,7 @@ class CMSMenu implements IteratorAggregate, i18nEntityProvider
         if (!$root) {
             $root = LeftAndMain::class;
         }
-        $abstractClasses = [LeftAndMain::class, CMSMain::class];
+        $abstractClasses = [LeftAndMain::class];
         $subClasses = array_values(ClassInfo::subclassesFor($root) ?? []);
         foreach ($subClasses as $className) {
             if ($recursive && $className != $root) {
