@@ -4,6 +4,7 @@ namespace SilverStripe\Admin\Tests\LeftAndMainTest;
 
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Dev\TestOnly;
+use SilverStripe\Core\Validation\ValidationResult;
 
 class MyTree extends DataObject implements TestOnly
 {
@@ -15,7 +16,7 @@ class MyTree extends DataObject implements TestOnly
         'Content' => 'Varchar'
     ];
 
-    public function validate()
+    public function validate(): ValidationResult
     {
         $validationResult = parent::validate();
         if ($this->Content === static::INVALID_CONTENT) {
