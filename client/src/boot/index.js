@@ -1,7 +1,7 @@
 /* global window */
 import Injector from 'lib/Injector';
 import { combineReducers, createStore, applyMiddleware } from 'redux';
-import thunkMiddleware from 'redux-thunk';
+import { thunk } from 'redux-thunk';
 import Config from 'lib/Config';
 import { setConfig } from 'state/config/ConfigActions';
 import registerComponents from 'boot/registerComponents';
@@ -16,7 +16,7 @@ async function appBoot() {
   registerComponents();
   registerReducers();
   const middleware = [
-    thunkMiddleware
+    thunk,
   ];
   const debugging = Config.get('debugging');
   let runMiddleware = applyMiddleware(...middleware);
