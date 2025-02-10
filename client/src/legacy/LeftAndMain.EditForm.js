@@ -50,11 +50,11 @@ $.entwine('ss', function($){
     PlaceholderHtml: '',
 
     /**
-     * Variable: ChangeTrackerOptions
-     * (Object)
+     * This can be customised to change settings for the change tracker.
+     * See jquery.changetracker.js
      */
     ChangeTrackerOptions: {
-      ignoreFieldSelector: '.no-change-track, .ss-upload :input, .cms-navigator :input'
+      ignoreFieldSelector: '',
     },
 
     /**

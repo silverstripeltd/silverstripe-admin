@@ -2,8 +2,6 @@ import $ from 'jquery';
 import i18n from 'i18n';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import Search from 'components/Search/Search.js';
-import { schemaMerge } from 'lib/schemaFieldValues';
 import { loadComponent } from 'lib/Injector';
 
 import '../../../thirdparty/jquery-ui/jquery-ui.js';
@@ -14,12 +12,9 @@ $.entwine('ss', function($) {
     onmatch: function () {
       if (this.needsColumnFix()) {
         this.fixColumns();
-        this.injectSearchButton(false);
       }
 
-      if (this.hasFilters()) {
-        this.injectSearchButton(true);
-      };
+      this.fixShowFilters();
 
       if (this.is('.grid-field--lazy-loadable') && (
         (this.closest('.ss-tabset, .cms-tabset').length === 0) || (this.data('gridfield-lazy-load-state') === 'force') )
@@ -30,6 +25,14 @@ $.entwine('ss', function($) {
       }
 
       this.data('gridfield-lazy-load-state', 'ready');
+    },
+
+    fixShowFilters: function() {
+      if (this.hasFilters()) {
+        this.addClass('show-filter');
+      } else {
+        this.removeClass('show-filter');
+      }
     },
 
     /**
@@ -52,7 +55,7 @@ $.entwine('ss', function($) {
     reload: function(ajaxOpts, successCallback) {
       var self = this, form = this.closest('form'),
         focusedElName = this.find(':input:focus').attr('name'), // Save focused element for restoring after refresh
-        data = form.find(':input:not(.grid-field__search-holder :input, .relation-search)').serializeArray(),
+        data = form.find(':input:not(.cms-content-filters :input, .relation-search)').serializeArray(),
         tbody = this.find('tbody'),
         colspan = this.find('.grid-field__title-row th').attr('colspan');
       ;
@@ -95,15 +98,6 @@ $.entwine('ss', function($) {
           // multiple relationships via keyboard.
           if(focusedElName) self.find(':input[name="' + focusedElName + '"]').focus();
 
-          // Update filter
-          if (self.find('.grid-field__filter-header, .grid-field__search-holder').length) {
-            var visible = ajaxOpts.data[0].filter === "show";
-            if (self.needsColumnFix()) {
-              self.fixColumns();
-            }
-            self.injectSearchButton(visible);
-          }
-
           if(successCallback) successCallback.apply(this, arguments);
           self.trigger('reload', self);
 
@@ -117,6 +111,7 @@ $.entwine('ss', function($) {
         },
         complete: function(request, status) {
           self.find('.loading').removeClass('loading');
+          self.fixShowFilters();
         }
       }, ajaxOpts));
     },
@@ -166,7 +161,7 @@ $.entwine('ss', function($) {
 
     needsColumnFix: function() {
       return (
-        this.find('.grid-field__filter-header, .grid-field__search-holder').length &&
+        this.find('.cms-content-filters').length &&
         !this.find('.grid-field__col-compact').length &&
         !this.find('th.col-Actions').length
       );
@@ -181,30 +176,6 @@ $.entwine('ss', function($) {
         var colspan = cell.attr('colspan') ?? 1;
         cell.attr('colspan', Number(colspan) + 1);
       });
-      var $extraCell = $('<th class="extra" />');
-      $('.grid-field__filter-header th:last .action').each(function() {
-        $(this).detach();
-        $extraCell.append($(this));
-      });
-      $('.grid-field__filter-header').append($extraCell);
-    },
-
-    injectSearchButton: function(visible) {
-      const hasLegacyFilterHeader = this.find('.grid-field__filter-header').length > 0;
-      let content;
-      if (visible) {
-        content = '<span class="non-sortable"></span>';
-        this.addClass('show-filter').find('.grid-field__filter-header, .grid-field__search-holder').removeClass('grid-field__search-holder--hidden');
-        if (!hasLegacyFilterHeader) {
-          this.find(':button[name=showFilter]').hide();
-        }
-      } else {
-        content = '<button type="button" title="Open search and filter" name="showFilter" class="btn btn-secondary font-icon-search btn--no-text btn--icon-lg grid-field__filter-open"></button>';
-        this.removeClass('show-filter').find('.grid-field__filter-header, .grid-field__search-holder').addClass('grid-field__search-holder--hidden');
-      }
-      if (hasLegacyFilterHeader) {
-        this.find('.sortable-header th:last').html(content);
-      }
     },
 
     /**
@@ -342,18 +313,16 @@ $.entwine('ss', function($) {
   })
 
   $('.grid-field :button[name=showFilter]').entwine({
-    onclick: function(e) {
-      this.closest('.grid-field')
-        .find('.grid-field__filter-header, .grid-field__search-holder')
-        .removeClass('grid-field__search-holder--hidden')
-        .find(':input:first').focus(); // focus first search field
-
-      this.closest('.grid-field').addClass('show-filter');
-      this.parent().html('<span class="non-sortable"></span>');
-      e.preventDefault();
-    }
+    /**
+     * Overrides showHide function in LeftAndMain.js
+     */
+    showHide() {
+      this.closest('.grid-field').toggleClass('show-filter');
+      this._super();
+      // `jQuery(this)` has to be used instead of `this` or `$(this)` or else it won't work for some reason
+      jQuery(this).toggle();
+    },
   });
-
 
   $('.grid-field .ss-gridfield-item').entwine({
     onclick: function (event) {
@@ -674,36 +643,19 @@ $.entwine('ss', function($) {
     }
   });
 
-  $('.js-injector-boot .grid-field .grid-field__search-holder').entwine({
-    Component: null,
-    ReactRoot: null,
-
+  $('.js-injector-boot .grid-field .search-holder').entwine({
     onmatch() {
-      this._super();
-
       // Make sure this appears at the top of the gridfield
-      this.prependTo(this.parent());
+      const holder = this.closest('.cms-content-filters');
+      holder.prependTo(holder.parent());
 
-      const cmsContent = this.closest('.cms-content').attr('id');
-      const context = (cmsContent)
-        ? { context: cmsContent }
-        : {};
-
-      const Search = loadComponent('Search', context);
-      this.setComponent(Search);
-
-      this.refresh();
-    },
-
-    onunmatch() {
+      // Allow LeftAndMain.js to set up the search holder
       this._super();
-      const root = this.getReactRoot();
-      if (root) {
-        root.unmount();
-        this.setReactRoot(null);
-      }
     },
 
+    /**
+     * Overrides close function in LeftAndMain.js
+     */
     close() {
       const props = this.data('schema');
 
@@ -729,6 +681,9 @@ $.entwine('ss', function($) {
       gridField.reload({ data: ajaxData }, successCallback);
     },
 
+    /**
+     * Overrides search function in LeftAndMain.js
+     */
     search(data) {
       const props = this.data('schema');
 
@@ -761,29 +716,12 @@ $.entwine('ss', function($) {
       gridField.reload({ data: ajaxData }, successCallback);
     },
 
-    refresh() {
-      const props = this.data('schema');
-      const Search = this.getComponent();
-      const handleHide = () => this.close();
-      const handleSearch = (data) => this.search(data);
-      const idName = String(props.gridfield).replace(/\-/g, '.');
-
-      let root = this.getReactRoot();
-      if (!root) {
-        root = createRoot(this[0]);
-      }
-      root.render(
-        <Search
-          id={`${props.gridfield}Search`}
-          display="VISIBLE"
-          displayBehavior="HIDEABLE"
-          filterPrefix="Search__"
-          onHide={handleHide}
-          onSearch={handleSearch}
-          {...props}
-        />
-      );
-      this.setReactRoot(root);
+    /**
+     * Overrides getSearchID function in LeftAndMain.js
+     */
+    getSearchID() {
+      const data = this.data('schema');
+      return `${data.gridfield}Search`;
     },
   });
 
@@ -795,67 +733,6 @@ $.entwine('ss', function($) {
     onkeydown: function(e) {
       if(e.key === 'Enter') {
         e.preventDefault();
-      }
-    }
-  })
-
-  /**
-   * Catch submission event in filter input fields, and submit the correct button
-   * rather than the whole form.
-   */
-  $('.grid-field .grid-field__filter-header :input').entwine({
-    onmatch: function() {
-      var filterbtn = this.closest('.extra').find('.ss-gridfield-button-filter'),
-        resetbtn = this.closest('.extra').find('.ss-gridfield-button-reset');
-
-      if(this.val()) {
-        filterbtn.addClass('filtered');
-        resetbtn.addClass('filtered');
-      }
-      this._super();
-    },
-    onunmatch: function() {
-      this._super();
-    },
-    onkeydown: function(e) {
-      // Skip reset button events, they should trigger default submission
-      if(this.closest('.ss-gridfield-button-reset').length) return;
-
-      var filterbtn = this.closest('.extra').find('.ss-gridfield-button-filter'),
-        resetbtn = this.closest('.extra').find('.ss-gridfield-button-reset');
-
-      if(e.keyCode == '13') {
-        var btns = this.closest('.grid-field__filter-header').find('.ss-gridfield-button-filter');
-        var filterState='show'; //filterstate should equal current state.
-        if(this.hasClass('ss-gridfield-button-close')||!(this.closest('.grid-field').hasClass('show-filter'))){
-          filterState='hidden';
-        }
-
-        var ajaxData = [{
-          name: btns.attr('name'),
-          value: btns.val(),
-          filter: filterState,
-          triggerChange: false
-        }];
-
-        if (btns.data('action-state')) {
-          ajaxData.push({
-            name: 'ActionState',
-            value: JSON.stringify(btns.data('action-state')),
-          });
-        }
-
-        const gridField =  $(this).getGridField();
-        const successCallback = function() {
-          gridField.keepStateInHistory();
-        };
-
-        gridField.reload({ data: ajaxData }, successCallback);
-
-        return false;
-      }else{
-        filterbtn.addClass('hover-alike');
-        resetbtn.addClass('hover-alike');
       }
     }
   });

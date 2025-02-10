@@ -86,7 +86,6 @@ abstract class ModelAdmin extends LeftAndMain
 
     private static $allowed_actions = [
         'ImportForm',
-        'SearchForm'
     ];
 
     private static $url_handlers = [

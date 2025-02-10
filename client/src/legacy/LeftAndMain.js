@@ -5,9 +5,7 @@ import $ from 'jquery';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import IframeDialog from 'components/IframeDialog/IframeDialog';
-import Search from 'components/Search/Search';
 import Loading from 'components/Loading/Loading';
-import { schemaMerge } from 'lib/schemaFieldValues';
 import { loadComponent } from 'lib/Injector';
 import escapeRegExp from 'lodash.escaperegexp';
 
@@ -1450,33 +1448,32 @@ $.entwine('ss', function($) {
   /**
    * CMS content filters
    */
-  $('#filters-button').entwine({
+  $('.view-controls :button[name=showFilter]').entwine({
     onmatch: function () {
       this._super();
 
       this.data('collapsed', true); // The current collapsed state of the element.
       this.data('animating', false); // True if the element is currently animating.
     },
-    onunmatch: function () {
-      this._super();
-    },
     showHide: function () {
-      var self = this,
-        $filters = $('.cms-content-filters').first(),
+      const self = this,
+        $filters = $(`#${this.attr('aria-controls')}`),
         collapsed = this.data('collapsed');
 
       // previously using "slideDown"/"slideUp" jQuery, but it was causing issues
       if (collapsed) {
         this.addClass('active');
         $filters.removeClass('cms-content-filters--hidden');
+        $filters.find(':input:first').focus();
       } else {
         this.removeClass('active');
         $filters.addClass('cms-content-filters--hidden');
       }
       self.data('collapsed', !collapsed);
     },
-    onclick: function () {
+    onclick: function (e) {
       this.showHide();
+      e.preventDefault();
     }
   });
 
@@ -1496,8 +1493,6 @@ $.entwine('ss', function($) {
       this.setComponent(Search);
 
       this.refresh();
-
-      const props = this.data('schema');
     },
 
     onunmatch() {
@@ -1552,6 +1547,10 @@ $.entwine('ss', function($) {
       }
     },
 
+    getSearchID() {
+      return 'Search';
+    },
+
     refresh() {
       const props = this.data('schema');
       const Search = this.getComponent();
@@ -1565,7 +1564,7 @@ $.entwine('ss', function($) {
       }
       root.render(
         <Search
-          id="Search"
+          id={this.getSearchID()}
           identifier="Search"
           display="VISIBLE"
           displayBehavior={"HIDEABLE"}
