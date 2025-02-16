@@ -30,8 +30,9 @@ class AdminErrorExtension extends Extension
         if ($this->owner instanceof LeftAndMain) {
             return $this->owner;
         }
-        if (Controller::has_curr() && (Controller::curr() instanceof LeftAndMain)) {
-            return Controller::curr();
+        $controller = Controller::curr();
+        if ($controller instanceof LeftAndMain) {
+            return $controller;
         }
         return null;
     }
