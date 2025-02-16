@@ -262,10 +262,11 @@ class CMSMenu implements IteratorAggregate, i18nEntityProvider
                         // checks on
                 if ($menuItem->controller) {
                     $controllerObj = singleton($menuItem->controller);
-                    if (Controller::has_curr()) {
+                    $controllerCurr = Controller::curr();
+                    if ($controllerCurr) {
                         // Necessary for canView() to have request data available,
                         // e.g. to check permissions against LeftAndMain->currentRecord()
-                        $controllerObj->setRequest(Controller::curr()->getRequest());
+                        $controllerObj->setRequest($controllerCurr->getRequest());
                         if (!$controllerObj->canView($member)) {
                             continue;
                         }
