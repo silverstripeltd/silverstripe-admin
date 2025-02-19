@@ -1540,6 +1540,13 @@ class LeftAndMain extends Controller implements PermissionProvider
             $readonlyFields = $form->Fields()->makeReadonly();
             $form->setFields($readonlyFields);
         }
+
+        // Check if the the record is a DataObject and if that DataObject requires sudo mode
+        // If so then require sudo mode for the edit form
+        if (is_a($record, DataObject::class) && $record->getRequireSudoMode()) {
+            $form->requireSudoMode();
+        }
+
         return $form;
     }
 

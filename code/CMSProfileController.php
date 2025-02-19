@@ -57,6 +57,10 @@ class CMSProfileController extends LeftAndMain
 
         $form->addExtraClass('member-profile-form root-form cms-edit-form center fill-height');
 
+        // We need to call requireSudoMode() here again, despite it being called in LeftAndMain::getEditForm(),
+        // so that the newly added Action goes into readonly mode
+        $form->requireSudoMode();
+
         return $form;
     }
 

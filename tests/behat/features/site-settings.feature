@@ -4,7 +4,8 @@ Feature: Site settings
   I want to be able to change site settings
 
   Background:
-    Given a "page" "Home"
+    Given I add an extension "SilverStripe\BehatExtension\Extensions\ActivateSudoModeServiceExtension" to the "SilverStripe\Security\SudoMode\SudoModeService" class
+    And a "page" "Home"
     And a "page" "MyPage"
     When I am logged in with "ADMIN" permissions
     And I go to "/admin/pages"

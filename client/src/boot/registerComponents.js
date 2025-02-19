@@ -51,6 +51,7 @@ import PopoverOptionSet from 'components/PopoverOptionSet/PopoverOptionSet';
 import ToastsContainer from 'containers/ToastsContainer/ToastsContainer';
 import ListboxField from 'components/ListboxField/ListboxField';
 import SearchableDropdownField from 'components/SearchableDropdownField/SearchableDropdownField';
+import SudoModePasswordField from 'components/SudoModePasswordField/SudoModePasswordField';
 
 export default () => {
   Injector.component.registerMany({
@@ -106,5 +107,6 @@ export default () => {
     ToastsContainer,
     ListboxField,
     SearchableDropdownField,
+    SudoModePasswordField,
   });
 };
