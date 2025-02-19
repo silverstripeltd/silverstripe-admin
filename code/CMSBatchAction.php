@@ -108,12 +108,12 @@ abstract class CMSBatchAction
 
             // Now make sure the tree title is appropriately updated
             $publishedRecord = DataObject::get_by_id($this->managedClass, $id);
-            if ($publishedRecord instanceof SiteTree) {
-                $treeTitle = CMSMain::singleton()->getRecordTreeMarkup($publishedRecord);
-            } else {
-                $treeTitle = $publishedRecord->TreeTitle;
-            }
             if ($publishedRecord) {
+                if ($publishedRecord instanceof SiteTree) {
+                    $treeTitle = CMSMain::singleton()->getRecordTreeMarkup($publishedRecord);
+                } else {
+                    $treeTitle = $publishedRecord->TreeTitle;
+                }
                 $status['modified'][$id] = [
                     'TreeTitle' => $treeTitle,
                 ];
