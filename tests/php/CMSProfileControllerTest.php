@@ -6,13 +6,33 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\FunctionalTest;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
+use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Security\SudoMode\SudoModeServiceInterface;
+use SilverStripe\Control\Controller;
 
 class CMSProfileControllerTest extends FunctionalTest
 {
-
     protected static $fixture_file = 'CMSProfileControllerTest.yml';
 
     public $autoFollowRedirection = false;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $session = Controller::curr()->getRequest()->getSession();
+        Injector::inst()->get(SudoModeServiceInterface::class)->activate($session);
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        $session = Controller::curr()->getRequest()->getSession();
+        $service = Injector::inst()->get(SudoModeServiceInterface::class);
+        // deactive() isn't part of the interface
+        if (method_exists($service, 'deactivate')) {
+            call_user_func([$service, 'deactivate'], $session);
+        }
+    }
 
     public function testMemberCantEditAnother()
     {

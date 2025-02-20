@@ -5,7 +5,8 @@ Feature: Manage groups
   So that I can control access to the CMS
 
   Background:
-    Given a "group" "BOB"
+    Given I add an extension "SilverStripe\BehatExtension\Extensions\ActivateSudoModeServiceExtension" to the "SilverStripe\Security\SudoMode\SudoModeService" class
+    And a "group" "BOB"
     And a "group" "Jane" with permissions "View draft content"
     And the "group" "GROUPS_EDITOR" has permissions "CMS_ACCESS_SecurityAdmin" and "EDIT_PERMISSIONS"
     And the "group" "MEMEBERS_EDITOR" has permissions "CMS_ACCESS_SecurityAdmin" and "APPLY_ROLES"

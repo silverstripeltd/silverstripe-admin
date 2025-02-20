@@ -5,7 +5,8 @@ Feature: Manage Security Permissions for Groups
   So that I can easily control access to the CMS
 
   Background:
-    Given a "group" "test group"
+    Given I add an extension "SilverStripe\BehatExtension\Extensions\ActivateSudoModeServiceExtension" to the "SilverStripe\Security\SudoMode\SudoModeService" class
+    And a "group" "test group"
     And a "member" "ADMIN" belonging to "ADMIN group" with "Email"="admin@example.org"
     And the "group" "ADMIN group" has permissions "Full administrative rights"
     And I am logged in with "ADMIN" permissions

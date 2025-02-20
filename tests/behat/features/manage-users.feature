@@ -5,7 +5,8 @@ Feature: Manage users
   So that I can control access to the CMS
 
   Background:
-    Given a "member" "ADMIN" belonging to "ADMIN group" with "Email"="admin@example.org"
+    Given I add an extension "SilverStripe\BehatExtension\Extensions\ActivateSudoModeServiceExtension" to the "SilverStripe\Security\SudoMode\SudoModeService" class
+    And a "member" "ADMIN" belonging to "ADMIN group" with "Email"="admin@example.org"
     And the "member" "ADMIN" belonging to "ADMIN group2"
     And a "member" "Staff" belonging to "Staff group" with "Email"="staffmember@example.org"
     And a "member" "Other Staff" belonging to "Staff group" with "Email"="othermember@example.org"

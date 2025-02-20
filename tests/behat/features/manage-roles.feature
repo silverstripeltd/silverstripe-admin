@@ -5,7 +5,8 @@ Feature: Manage Roles
   So that I can control access to the CMS
 
   Background:
-    Given a "group" "Jane"
+    Given I add an extension "SilverStripe\BehatExtension\Extensions\ActivateSudoModeServiceExtension" to the "SilverStripe\Security\SudoMode\SudoModeService" class
+    And a "group" "Jane"
     And the "role" "This role is just another role"
     And the "role" "View draft content" has permissions "View draft content"
     And the "page" "My page"
