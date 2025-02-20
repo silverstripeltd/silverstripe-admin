@@ -274,6 +274,13 @@ abstract class ModelAdmin extends LeftAndMain
         $form->setFormAction($editFormAction);
         $form->setAttribute('data-pjax-fragment', 'CurrentForm');
 
+        // Check if the the record  requires sudo mode, If so then require sudo mode for the edit form
+        $list = $this->getList();
+        $record = Injector::inst()->create($list->dataClass());
+        if ($record->getRequireSudoMode()) {
+            $form->requireSudoMode();
+        }
+
         $this->extend('updateEditForm', $form);
 
         return $form;
