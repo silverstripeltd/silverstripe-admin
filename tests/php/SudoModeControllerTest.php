@@ -69,7 +69,7 @@ class SudoModeControllerTest extends FunctionalTest
         $response = $this->get(SudoModeController::singleton()->Link('check'));
         $this->assertSame(200, $response->getStatusCode());
         $result = json_decode((string) $response->getBody(), true);
-        $this->assertTrue($result['active'], 'Sudo mode should be active immediately after login');
+        $this->assertFalse($result['active'], 'Sudo mode should not be active immediately after login');
     }
 
     public function testSudoModeExpired()

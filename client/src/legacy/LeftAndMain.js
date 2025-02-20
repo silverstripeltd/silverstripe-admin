@@ -436,7 +436,7 @@ $.entwine('ss', function($) {
      * Nice wrapper for reloading current history state.
      */
     reloadCurrentPanel: function() {
-      this.loadPanel(document.URL, null, null, true);
+      this.loadPanel(document.URL, '', {}, true);
     },
 
     /**

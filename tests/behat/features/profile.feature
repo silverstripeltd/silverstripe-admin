@@ -6,6 +6,7 @@ Feature: Manage my own settings
 
   Background:
     Given a "member" "Joe" belonging to "Admin group" with "Email"="joe@example.org" and "Password"="secret"
+    And I add an extension "SilverStripe\BehatExtension\Extensions\ActivateSudoModeServiceExtension" to the "SilverStripe\Security\SudoMode\SudoModeService" class
     And the "group" "Admin group" has permissions "Full administrative rights"
     And the "member" "Joe" belonging to "Admin group2"
     And the "group" "Admin group2" has permissions "Full administrative rights"

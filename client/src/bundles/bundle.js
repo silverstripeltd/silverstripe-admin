@@ -83,6 +83,7 @@ import 'expose-loader?exposes=withDragDropContext!lib/withDragDropContext';
 import 'expose-loader?exposes=withRouter!lib/withRouter';
 import 'expose-loader?exposes=ssUrlLib!lib/urls';
 import 'expose-loader?exposes=SearchableDropdownField!components/SearchableDropdownField/SearchableDropdownField';
+import 'expose-loader?exposes=SudoModePasswordField!components/SudoModePasswordField/SudoModePasswordField';
 
 // Legacy CMS
 import '../legacy/jquery.changetracker';
@@ -113,6 +114,7 @@ import '../legacy/ConfirmedPasswordField';
 import '../legacy/SelectionGroup';
 import '../legacy/DateField';
 import '../legacy/ToggleCompositeField';
+import '../legacy/SudoModePasswordField/SudoModePasswordFieldEntwine';
 import '../legacy/TreeDropdownField/TreeDropdownFieldEntwine';
 import '../legacy/UsedOnTable/UsedOnTableEntwine';
 import '../legacy/DatetimeField';
