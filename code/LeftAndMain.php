@@ -19,6 +19,7 @@ use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Manifest\ModuleResourceLoader;
 use SilverStripe\Core\Manifest\VersionProvider;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\Dev\TestOnly;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
@@ -816,9 +817,11 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
      *
      * @throws InvalidArgumentException
      * @return LeftAndMain_SearchFilter
+     * @deprecated 2.4.0 Will be removed without equivalent functionality to replace it.
      */
     protected function getSearchFilter()
     {
+        Deprecation::noticeWithNoReplacment('2.4.0');
         if ($this->searchFilterCache) {
             return $this->searchFilterCache;
         }
