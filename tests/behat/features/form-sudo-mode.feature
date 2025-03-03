@@ -19,7 +19,7 @@ Feature: Form sudo mode
     # CMS profile
     When I go to "/admin/myprofile"
     Then I should see "Verify to continue"
-    And I should see a "#action_save[readonly]" element
+    And I should see a "#Form_EditForm_action_save[readonly]" element
 
     # Security admin - members
     When I go to "/admin/security"
@@ -65,7 +65,7 @@ Feature: Form sudo mode
     And I fill in "SudoModePassword" with "incorrect-password"
     And I click on the ".sudo-mode-password-field__verify-button" element
     Then I should see "Incorrect password"
-    And I should see a "#action_save[readonly]" element
+    And I should see a "#Form_EditForm_action_save[readonly]" element
 
   Scenario: Sensitive data can be edited after activating sudo mode
 
@@ -75,7 +75,7 @@ Feature: Form sudo mode
     And I fill in "SudoModePassword" with "Secret!123"
     And I click on the ".sudo-mode-password-field__verify-button" element
     And I wait for 2 seconds
-    Then I should not see a "#action_save[readonly]" element
+    Then I should not see a "#Form_EditForm_action_save[readonly]" element
 
     # Security admin - members
     When I go to "/admin/security"

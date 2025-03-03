@@ -16,11 +16,29 @@ window.ss.config = {
 };
 
 let doResolve;
+let doReject;
+
+beforeEach(() => {
+  doResolve = undefined;
+  doReject = undefined;
+});
+
+function createJsonError(message) {
+  return {
+    response: {
+      json: () => ({
+        result: false,
+        message
+      }),
+    },
+  };
+}
 
 jest.mock('lib/Backend', () => ({
   createEndpointFetcher: () => () => (
-    new Promise((resolve) => {
+    new Promise((resolve, reject) => {
       doResolve = resolve;
+      doReject = reject;
     })
   )
 }));
@@ -68,10 +86,7 @@ test('SudoModePasswordField should show a message on failure', async () => {
   passwordField.value = 'password';
   const verifyButton = await screen.findByText('Verify');
   fireEvent.click(verifyButton);
-  doResolve({
-    result: false,
-    message: 'A big failure'
-  });
+  await doReject(createJsonError('A big failure'));
   const message = await screen.findByText('A big failure');
   expect(message).not.toBeNull();
   expect(onSuccess).not.toBeCalled();
