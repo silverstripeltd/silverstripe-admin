@@ -79,7 +79,6 @@ class SudoModeController extends AdminController
 
         if (!SecurityToken::inst()->checkRequest($request)) {
             return $this->jsonResponse([
-                'result' => false,
                 'message' => _t(__CLASS__ . '.TIMEOUT', 'Session timed out, please refresh and try again.'),
             ], 403);
         }
@@ -87,14 +86,13 @@ class SudoModeController extends AdminController
         // Validate password
         if (!$this->checkPassword($request)) {
             return $this->jsonResponse([
-                'result' => false,
                 'message' => _t(__CLASS__ . '.INVALID', 'Incorrect password'),
             ], 401);
         }
 
         // Activate sudo mode and return successful result
         $this->getSudoModeService()->activate($request->getSession());
-        return $this->jsonResponse(['result' => true]);
+        return $this->jsonResponse([]);
     }
 
     /**

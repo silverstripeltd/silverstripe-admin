@@ -53,12 +53,12 @@ function SudoModePasswordField(props) {
     const headers = {
       'X-SecurityID': Config.get('SecurityID'),
     };
-    const responseJson = await fetcher(data, headers);
-    if (responseJson.result) {
-      onSuccess();
-    } else {
-      setResponseMessage(responseJson.message);
-    }
+    fetcher(data, headers)
+      .then(() => onSuccess())
+      .catch(async (err) => {
+        const responseJson = await err.response.json();
+        setResponseMessage(responseJson.message);
+      });
   }
 
   /**
