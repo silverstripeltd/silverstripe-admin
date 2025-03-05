@@ -2361,10 +2361,10 @@
     stylelint-config-standard "^36.0.0"
     stylelint-scss "^6.2.1"
 
-"@silverstripe/webpack-config@^3.0.0-alpha2":
-  version "3.0.0-alpha2"
-  resolved "https://registry.yarnpkg.com/@silverstripe/webpack-config/-/webpack-config-3.0.0-alpha2.tgz#ea2c50a953e5de4e53dacfc42501c9b3c88835f2"
-  integrity sha512-KsqwAxKLvutDnYf755Z16gUO4EeRH6GnAgl1qaejFRN+6bRI2wTnPuiGZz0OLKvH8Fz+/zEmL1WFLmm5iQIk5A==
+"@silverstripe/webpack-config@^3.0.0-alpha3":
+  version "3.0.0-alpha3"
+  resolved "https://registry.yarnpkg.com/@silverstripe/webpack-config/-/webpack-config-3.0.0-alpha3.tgz#db3ab129324b3b2e56e93323c9ec7544c75fcb52"
+  integrity sha512-j4WmK7TdN0/WCkqiJ2atXA6xZdUxO+SQ0/mdXaGWtkJQFn34Q/QcHKjD4iqn/TCi//Lyr5E+zfORMLDBZhwN4A==
   dependencies:
     "@babel/core" "^7.19.6"
     "@babel/preset-env" "^7.19.4"

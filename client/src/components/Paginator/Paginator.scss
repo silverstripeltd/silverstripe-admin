@@ -1,0 +1,89 @@
+.paginator-footer > div {
+  display: flex;
+}
+
+.paginator-page {
+  flex: 1;
+  text-align: center;
+  margin-top: -3px;
+
+  // Replicate .form-control;
+  select {
+    height: calc(#{$line-height-base} + #{$spacer});
+    padding: $input-btn-padding-y $input-btn-padding-x;
+    line-height: $input-btn-line-height;
+    color: $input-color;
+    border: $input-btn-border-width solid $input-border-color;
+    background-color: $input-bg;
+    background-image: none;
+    text-align: center;
+    display: inline;
+
+    &:focus {
+      color: $input-focus-color;
+      background-color: $input-focus-bg;
+      border-color: $input-focus-border-color;
+      outline: 0;
+      box-shadow: $input-box-shadow, $input-focus-box-shadow;
+    }
+  }
+}
+
+.paginator-footer {
+  // approx width to allow for 1000's of images
+  width: 200px;
+  margin: 0 auto;
+}
+
+$paginator-button-width: 36px;
+$paginator-button-height: 30px;
+
+.paginator-prev button:before {
+  content: "'";
+}
+
+.paginator-next button:before {
+  content: "&";
+}
+
+.paginator-prev,
+.paginator-next {
+  // hold space so pagination doesn't move around
+  width: $paginator-button-width;
+
+  button {
+    white-space: nowrap;
+    border: 0;
+    background: transparent;
+    width: $paginator-button-width;
+    height: $paginator-button-height;
+    position: relative;
+    border-radius: $btn-border-radius;
+    overflow: hidden;
+
+    &:before {
+      font-family: "silverstripe";
+      color: $text-muted;
+      width: $paginator-button-width;
+      height: $paginator-button-height;
+      background-color: $body-bg;
+      position: absolute;
+      top: 0;
+      left: 0;
+      padding: $input-btn-padding-y;
+      transition: all .2s ease-in-out;
+      font-size: $font-size-lg;
+      -webkit-font-smoothing: antialiased;
+      line-height: $line-height-base;
+    }
+
+    &:hover {
+      background-color: $gray-200;
+      border-color: transparent;
+
+      &:before {
+        background-color: $gray-200;
+      }
+    }
+  }
+}

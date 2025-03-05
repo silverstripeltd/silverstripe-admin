@@ -84,6 +84,7 @@ import 'expose-loader?exposes=withRouter!lib/withRouter';
 import 'expose-loader?exposes=ssUrlLib!lib/urls';
 import 'expose-loader?exposes=SearchableDropdownField!components/SearchableDropdownField/SearchableDropdownField';
 import 'expose-loader?exposes=SudoModePasswordField!components/SudoModePasswordField/SudoModePasswordField';
+import 'expose-loader?exposes=Paginator!components/Paginator/Paginator';
 
 // Legacy CMS
 import '../legacy/jquery.changetracker';
