@@ -16,11 +16,6 @@ use SilverStripe\Security\Security;
  */
 abstract class FormSchemaController extends AdminController
 {
-    /**
-     * Form schema header identifier
-     */
-    public const SCHEMA_HEADER = 'X-Formschema-Request';
-
     private static array $allowed_actions = [
         'schema',
     ];
@@ -113,7 +108,7 @@ abstract class FormSchemaController extends AdminController
      */
     public function getSchemaResponse(string $schemaID, ?Form $form = null, ?ValidationResult $errors = null, array $extraData = []): HTTPResponse
     {
-        $parts = $this->getRequest()->getHeader(static::SCHEMA_HEADER);
+        $parts = $this->getRequest()->getHeader(FormSchema::SCHEMA_HEADER);
         $data = $this
             ->getFormSchema()
             ->getMultipartSchema($parts, $schemaID, $form, $errors);
@@ -133,7 +128,7 @@ abstract class FormSchemaController extends AdminController
      */
     protected function getSchemaRequested(): bool
     {
-        $parts = $this->getRequest()->getHeader(static::SCHEMA_HEADER);
+        $parts = $this->getRequest()->getHeader(FormSchema::SCHEMA_HEADER);
         return !empty($parts);
     }
 

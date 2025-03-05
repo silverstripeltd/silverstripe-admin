@@ -101,16 +101,6 @@
   }
 }
 
-.grid-field__filter-open {
-  .grid-field__table & {
-    vertical-align: bottom;
-    margin: 0;
-    float: right;
-    margin-top: -$input-btn-padding-y;
-    margin-bottom: -$input-btn-padding-y;
-  }
-}
-
 .grid-field__filter-submit,
 .grid-field__filter-clear {
   .grid-field & {
@@ -150,17 +140,6 @@ div.grid-field__sort-field + .form__fieldgroup-item {
   top: 16px;
   right: 7px;
   position: absolute;
-}
-
-.grid-field__filter-header {
-  .fieldgroup:not(.grid-field__filter-buttons),
-  .fieldgroup:not(.grid-field__filter-buttons) .fieldgroup-field {
-    width: 100%;
-  }
-
-  .ss-gridfield-button-reset {
-    margin-right: 0;
-  }
 }
 
 .grid-field__filter-buttons {
