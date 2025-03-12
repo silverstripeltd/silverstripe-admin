@@ -19,7 +19,6 @@ use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Manifest\ModuleResourceLoader;
 use SilverStripe\Core\Manifest\VersionProvider;
-use SilverStripe\Dev\Deprecation;
 use SilverStripe\Dev\TestOnly;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
@@ -810,36 +809,6 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
         ]);
 
         return $items;
-    }
-
-    /**
-     * Gets the current search filter for this request, if available
-     *
-     * @throws InvalidArgumentException
-     * @return LeftAndMain_SearchFilter
-     * @deprecated 2.4.0 Will be removed without equivalent functionality to replace it.
-     */
-    protected function getSearchFilter()
-    {
-        Deprecation::noticeWithNoReplacment('2.4.0');
-        if ($this->searchFilterCache) {
-            return $this->searchFilterCache;
-        }
-
-        // Check for given FilterClass
-        $params = $this->getRequest()->getVar('q');
-        if (empty($params['FilterClass'])) {
-            return null;
-        }
-
-        // Validate classname
-        $filterClass = $params['FilterClass'];
-        $filterInfo = new ReflectionClass($filterClass);
-        if (!$filterInfo->implementsInterface(LeftAndMain_SearchFilter::class)) {
-            throw new InvalidArgumentException(sprintf('Invalid filter class passed: %s', $filterClass));
-        }
-
-        return $this->searchFilterCache = Injector::inst()->createWithArgs($filterClass, [$params]);
     }
 
     /**

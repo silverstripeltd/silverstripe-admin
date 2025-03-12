@@ -26,6 +26,20 @@
 
   @media(width >= 375px) {
     flex-direction: row;
+
+    // Make sure fields using WithinRangeFilter display the same in gridfield search
+    // as they do in CMSMain search
+    // This is necessary to override .cms-edit-form styling which doesn't apply in CMSMain
+    .form-group {
+      margin-right: map_get($spacers, 2);
+      display: inline-block;
+
+      .form__field-holder,
+      .form__field-label {
+        padding-left: 0;
+        padding-right: 0;
+      }
+    }
   }
 }
 

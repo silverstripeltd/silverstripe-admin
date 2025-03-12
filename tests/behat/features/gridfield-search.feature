@@ -26,7 +26,7 @@ Feature: Search in GridField
     When I go to "/admin/test"
       And I press the "Open search and filter" button
       And I press the "Advanced" button
-    Then I should see a "#Form_CompaniesSearchForm_Search_Name.no-change-track" element
+    Then I should see a "#Form_EditForm [name='Search__Name']" element
       And I fill in "Search__Name" with "Walmart"
       And I press the "Enter" key in the "Search__Name" field
     Then I should see "Walmart" in the "#Form_EditForm" element

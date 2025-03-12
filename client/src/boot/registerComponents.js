@@ -52,6 +52,7 @@ import ToastsContainer from 'containers/ToastsContainer/ToastsContainer';
 import ListboxField from 'components/ListboxField/ListboxField';
 import SearchableDropdownField from 'components/SearchableDropdownField/SearchableDropdownField';
 import SudoModePasswordField from 'components/SudoModePasswordField/SudoModePasswordField';
+import Paginator from 'components/Paginator/Paginator';
 
 export default () => {
   Injector.component.registerMany({
@@ -108,5 +109,6 @@ export default () => {
     ListboxField,
     SearchableDropdownField,
     SudoModePasswordField,
+    Paginator,
   });
 };

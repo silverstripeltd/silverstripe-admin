@@ -59,11 +59,15 @@ import debounce from 'lodash.debounce';
 
     this.defaults = {
       fieldSelector: ':input:not(:button,[type="submit"],[type="search"],.gridstate)',
-      ignoreFieldSelector: '.no-change-track,[type="search"]',
+      ignoreFieldSelector: '',
       changedCssClass: 'changed',
     };
 
     var options = $.extend({}, this.defaults, _options);
+
+    // It is mandatory to never allow the search box or markup in the preview to affect change tracking.
+    // Make sure there's no leading comma
+    options.ignoreFieldSelector = `${options.ignoreFieldSelector},.no-change-track,.search-box *,.cms-navigator *`.replace(/^,/, '');
 
     this.initialize = function() {
       // optional metadata plugin support
@@ -235,7 +239,7 @@ import debounce from 'lodash.debounce';
     this.getFields = function() {
       return this
         .find(options.fieldSelector)
-        .not(options.ignoreFieldSelector + ', .search-box *');
+        .not(options.ignoreFieldSelector);
     };
 
     // Support invoking "public" methods as string arguments
