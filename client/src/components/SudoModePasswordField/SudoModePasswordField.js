@@ -15,13 +15,42 @@ function SudoModePasswordField(props) {
   const {
     onSuccess,
     autocomplete,
+    initiallyCollapsed,
     verifyMessage,
+    sectionTitle,
   } = props;
   const passwordFieldRef = createRef();
   const [responseMessage, setResponseMessage] = useState('');
   const [showVerify, setShowVerify] = useState(false);
 
   const clientConfig = Config.getSection('SilverStripe\\Admin\\SudoModeController');
+
+  let verifyMessageValue = verifyMessage;
+  if (!verifyMessageValue) {
+    if (sectionTitle) {
+      verifyMessageValue = i18n.inject(
+        i18n._t(
+          'Admin.SUDO_MODE_PASSWORD_FIELD_VERIFY_SECTION_TITLE',
+          '\"{sectionTitle}\" is protected and is in read-only mode. Before editing please verify that it\'s you first.'
+        ),
+        { sectionTitle }
+      );
+    } else {
+      verifyMessageValue = i18n._t(
+        'Admin.SUDO_MODE_PASSWORD_FIELD_VERIFY',
+        'This section is protected and is in read-only mode. Before editing please verify that it\'s you first.'
+      );
+    }
+  }
+  const helpLink = clientConfig.helpLink;
+  if (helpLink) {
+    verifyMessageValue = <>
+      {verifyMessageValue}
+      <a href={helpLink} className="sudo-mode-password-field__notice-help" target="_blank" rel="noopener noreferrer">
+        { i18n._t('Admin.WHATS_THIS', 'What is this?') }
+      </a>
+    </>;
+  }
 
   /**
    * Handle clicking the button to confirm the sudo mode notice
@@ -80,22 +109,9 @@ function SudoModePasswordField(props) {
    * to enter sudo mode.
    */
   function renderConfirm() {
-    const helpLink = clientConfig.helpLink;
-    let verifyMessageValue = verifyMessage;
-    if (!verifyMessageValue) {
-      verifyMessageValue = i18n._t(
-        'Admin.SUDO_MODE_PASSWORD_FIELD_VERIFY',
-        'This section is protected and is in read-only mode. Before editing please verify that it\'s you first.'
-      );
-    }
     return <div className="sudo-mode__notice sudo-mode-password-field__notice--required">
       <p className="sudo-mode-password-field__notice-message">
         { verifyMessageValue }
-        { helpLink && (
-          <a href={helpLink} className="sudo-mode-password-field__notice-help" target="_blank" rel="noopener noreferrer">
-            { i18n._t('Admin.WHATS_THIS', 'What is this?') }
-          </a>
-        ) }
       </p>
       { !showVerify && (
         <Button
@@ -118,7 +134,7 @@ function SudoModePasswordField(props) {
       name: 'SudoModePassword',
       id: 'SudoModePassword',
       className: 'no-change-track',
-      autocomplete,
+      autoComplete: autocomplete,
       onKeyDown: (evt) => handleVerifyKeyDown(evt),
       innerRef: passwordFieldRef,
     };
@@ -143,12 +159,26 @@ function SudoModePasswordField(props) {
     </div>;
   }
 
+  const expanded = !initiallyCollapsed || showVerify;
+
   // Render the component
   return <div className="sudo-mode-password-field">
-    <div className="sudo-mode-password-field-inner alert alert-info panel panel--padded">
+    { !expanded && <div className="sudo-mode-password-field__expander alert alert-info panel">
+      <div className="sudo-mode-password-field__expander-text-container">{ verifyMessageValue }</div>
+      <div className="sudo-mode-password-field__expander-button-container">
+        <Button
+          className="sudo-mode-password-field__expander-button font-icon-lock"
+          color="info"
+          onClick={() => handleConfirmClick()}
+        >
+          { i18n._t('Admin.VERIFY', 'Verify') }
+        </Button>
+      </div>
+    </div>}
+    { expanded && <div className="sudo-mode-password-field__inner alert alert-info panel panel--padded">
       { renderConfirm() }
       { showVerify && renderVerify() }
-    </div>
+    </div> }
   </div>;
 }
 
@@ -156,6 +186,8 @@ SudoModePasswordField.propTypes = {
   verifyMessage: PropTypes.string,
   onSuccess: PropTypes.func.isRequired,
   autocomplete: PropTypes.string.isRequired,
+  initiallyCollapsed: PropTypes.bool.isRequired,
+  sectionTitle: PropTypes.string.isRequired,
 };
 
 export { SudoModePasswordField as Component };

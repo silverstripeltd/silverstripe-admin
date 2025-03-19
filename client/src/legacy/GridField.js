@@ -241,6 +241,40 @@ $.entwine('ss', function($) {
         retArr.push([key, val].join('='));
       }
       return retArr.length === 0 ? '' : '?' + retArr.join('&');
+    },
+
+    /**
+     * Update the gridstate that is stored in the URL
+     * Pass in a callback that will modify the JSON object that is stored in the URL
+     * for instaed to update the sort order of a MyObject gridfield:
+     *
+     * const callback = (obj) => obj.SortColumn = 'FirstName';
+     * jQuery('#some-gridfield').updateUrlGridState(callback);
+     *
+     * @param {function} callback
+     * @returns void
+     */
+    updateUrlGridState: function (callback) {
+      const pairs = [];
+      const searchParams = window.location.search.replace(/^\?/, '').split('&');
+      for (let i = 0; i < searchParams.length; i++) {
+        let pair = searchParams[i]
+        const parts = pair.split('=');
+        console.log(this.data('name'));
+        if (parts.length === 2) {
+          const key = decodeURIComponent(parts[0]);
+          let value = decodeURIComponent(parts[1]);
+          if (key.indexOf('gridState-' + this.data('name')) === 0) {
+            const obj = JSON.parse(value);
+            callback(obj);
+            value = JSON.stringify(obj);
+          }
+          pair = encodeURIComponent(key) + '=' + encodeURIComponent(value);
+        }
+        pairs.push(pair)
+      }
+      const url = window.location.origin + window.location.pathname + '?' + pairs.join('&');
+      window.ss.router.replace(url, undefined, undefined, false);
     }
   });
 
