@@ -30,6 +30,28 @@ export default {
     }
   },
   argTypes: {
+    sectionTitle: {
+      description: 'The title of the section that is being protected.',
+      control: 'text',
+      type: {
+        required: false
+      },
+      table: {
+        type: { summary: 'string' },
+        defaultValue: { summary: 'My special data' },
+      },
+    },
+    collapsed: {
+      description: 'Whether the password field should be collapsed by default.',
+      control: 'boolean',
+      type: {
+        required: true
+      },
+      table: {
+        type: { summary: 'boolean' },
+        defaultValue: { summary: 'false' },
+      },
+    },
     autocomplete: {
       description: 'The autocomplete attribute for the password field.',
       control: 'text',
@@ -44,8 +66,13 @@ export default {
   }
 };
 
-export const _SudoModePasswordField = (props) => <SudoModePasswordField
-  {...props}
-  onSuccess={() => {}}
-  autocomplete={props.autocomplete || 'off'}
-/>;
+export const _SudoModePasswordField = (props) => {
+  const newProps = {
+    ...props,
+    onSuccess: () => {},
+    autocomplete: props.autocomplete || 'off',
+    collapsed: props.hasOwnProperty('collapsed') ? props.collapsed : false,
+    sectionTitle: props.sectionTitle || 'My special data',
+  };
+  return <SudoModePasswordField {...newProps}/>;
+};
