@@ -29,6 +29,8 @@ function makeProps(obj = {}) {
   return {
     onSuccess: () => {},
     autocomplete: 'off',
+    initiallyCollapsed: false,
+    sectionTitle: '',
     ...obj,
   };
 }
@@ -75,4 +77,51 @@ test('SudoModePasswordField should show a message on failure', async () => {
   const message = await screen.findByText('A big failure');
   expect(message).not.toBeNull();
   expect(onSuccess).not.toBeCalled();
+});
+
+test('SudoModePasswordField when initiallyCollapsed is false', async () => {
+  const { container } = render(
+    <SudoModePasswordField {...makeProps({
+      initiallyCollapsed: false,
+    })}
+    />
+  );
+  const action = await screen.findByText('Verify to continue');
+  expect(container.querySelector('.sudo-mode-password-field__notice-button')).not.toBeNull();
+  expect(container.querySelector('.sudo-mode-password-field__expander')).toBeNull();
+  fireEvent.click(action);
+  await screen.findByText('Enter your password');
+  expect(container.querySelector('.sudo-mode-password-field__verify-button')).not.toBeNull();
+});
+
+test('SudoModePasswordField when initiallyCollapsed is true', async () => {
+  const { container } = render(
+    <SudoModePasswordField {...makeProps({
+      initiallyCollapsed: true,
+    })}
+    />
+  );
+  const action = await screen.findByText('Verify');
+  expect(container.querySelector('.sudo-mode-password-field__notice-button')).toBeNull();
+  expect(container.querySelector('.sudo-mode-password-field__expander')).not.toBeNull();
+  fireEvent.click(action);
+  await screen.findByText('Enter your password');
+  expect(container.querySelector('.sudo-mode-password-field__verify-button')).not.toBeNull();
+});
+
+test('SudoModePasswordField when sectionTitle is empty', async () => {
+  const { container } = render(<SudoModePasswordField {...makeProps()}/>);
+  await screen.findByText('Verify to continue');
+  const expected = "This section is protected and is in read-only mode. Before editing please verify that it's you first.";
+  expect(container.querySelector('.sudo-mode-password-field__notice-message').innerHTML).toBe(expected);
+});
+
+test('SudoModePasswordField when sectionTitle is not empty', async () => {
+  const { container } = render(<SudoModePasswordField {...makeProps({
+    sectionTitle: 'Hello world',
+  })}
+  />);
+  await screen.findByText('Verify to continue');
+  const expected = "\"Hello world\" is protected and is in read-only mode. Before editing please verify that it's you first.";
+  expect(container.querySelector('.sudo-mode-password-field__notice-message').innerHTML).toBe(expected);
 });
