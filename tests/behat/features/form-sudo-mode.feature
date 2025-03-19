@@ -49,13 +49,17 @@ Feature: Form sudo mode
     # GridField relation - has_many
     When I go to "/admin/pages"
     And I click on "My page" in the tree
-    And I click on the "#Form_EditForm_HasManyMembers .ss-gridfield-item.first" element
+    Then I should see a "#Form_EditForm_HasManyMembers .sudo-mode-password-field" element
+    And I should not see a "#Form_EditForm_HasManyMembers .new-link" element
+    When I click on the "#Form_EditForm_HasManyMembers .ss-gridfield-item.first" element
     And I should see a "#Form_ItemEditForm_action_doSave[readonly]" element
 
     # GridField relation - many_many
     When I go to "/admin/pages"
     And I click on "My page" in the tree
-    And I click on the "#Form_EditForm_ManyManyMembers .ss-gridfield-item.first" element
+    Then I should see a "#Form_EditForm_ManyManyMembers .sudo-mode-password-field" element
+    And I should not see a "#Form_EditForm_ManyManyMembers .new-link" element
+    When I click on the "#Form_EditForm_ManyManyMembers .ss-gridfield-item.first" element
     And I should see a "#Form_ItemEditForm_action_doSave[readonly]" element
 
   Scenario: Putting in a wrong password in to the sudo mode password field shows an error message
@@ -113,3 +117,20 @@ Feature: Form sudo mode
     And I click on "My page" in the tree
     And I click on the "#Form_EditForm_ManyManyMembers .ss-gridfield-item.first" element
     And I should not see a "#Form_ItemEditForm_action_doSave[readonly]" element
+
+  Scenario: All GridFields are reloaded after activating sudo mode via the GridField
+    When I go to "/admin/pages"
+    And I click on "My page" in the tree
+    Then I should see a "#Form_EditForm_HasManyMembers .sudo-mode-password-field" element
+    And I should see a "#Form_EditForm_ManyManyMembers .sudo-mode-password-field" element
+    And I should not see a "#Form_EditForm_HasManyMembers .new-link" element
+    And I should not see a "#Form_EditForm_ManyManyMembers .new-link" element
+    When I click on the "#Form_EditForm_HasManyMembers .sudo-mode-password-field__expander-button" element
+    And I fill in "SudoModePassword" with "Secret!123"
+    And I click on the "#Form_EditForm_HasManyMembers .sudo-mode-password-field__verify-button" element
+    And I wait for 2 seconds
+    Then I should not see a "#Form_EditForm_HasManyMembers .sudo-mode-password-field" element
+    And I should not see a "#Form_EditForm_ManyManyMembers .sudo-mode-password-field" element
+    And I should see a "#Form_EditForm_HasManyMembers .new-link" element
+    And I should see a "#Form_EditForm_ManyManyMembers .new-link" element
+
