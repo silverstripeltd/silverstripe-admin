@@ -44,47 +44,43 @@ const SearchableDropdownField = ({
     setJustChanged(false);
   });
 
-  const fetchOptions = (term) => {
+  /**
+   * Fetch the lazy loaded options from the server, filtered by the given term
+   */
+  const fetchLazyLoadOptions = (term) => {
     if (fetchCache.hasOwnProperty(term)) {
       return Promise.resolve(fetchCache[term]);
     }
-    let innerFetchOptions = () => {
-      const fetchUrl = url.parse(optionUrl, true);
-      if (fetchUrl.search) {
-        // Remove the search key, though keep the query key
-        // This is so url.format uses the query key instead of the search key below
-        delete fetchUrl.search;
-      }
-      fetchUrl.query.term = term;
-      const endpoint = url.format(fetchUrl);
-      const csrfHeader = FormConstants.CSRF_HEADER;
-      const headers = {};
-      headers[csrfHeader] = Config.get('SecurityID');
-      return backend.get(endpoint, headers)
-        .then(response => response.json())
-        .then(responseJson => {
-          fetchCache[term] = responseJson;
-          setFetchCache(fetchCache);
-          return responseJson;
-        });
-    };
-    innerFetchOptions = debounce(innerFetchOptions, 500);
-    return innerFetchOptions();
+    const fetchUrl = url.parse(optionUrl, true);
+    if (fetchUrl.search) {
+      // Remove the search key, though keep the query key
+      // This is so url.format uses the query key instead of the search key below
+      delete fetchUrl.search;
+    }
+    fetchUrl.query.term = term;
+    const endpoint = url.format(fetchUrl);
+    const csrfHeader = FormConstants.CSRF_HEADER;
+    const headers = {};
+    headers[csrfHeader] = Config.get('SecurityID');
+    return backend.get(endpoint, headers)
+      .then(response => response.json())
+      .then(responseJson => {
+        fetchCache[term] = responseJson;
+        setFetchCache(fetchCache);
+        return responseJson;
+      });
   };
 
   /**
-   * Get the options that should be shown to the user for this SearchableDropdownField,
+   * Get the lazy=loaded options that should be shown to the user for this SearchableDropdownField,
    * optionally filtering by the given string input
    */
-  const getOptions = (input) => {
-    if (!lazyLoad) {
-      return Promise.resolve(options);
-    }
+  const getLazyLoadOptions = debounce((input) => {
     if (!input) {
       return Promise.resolve([]);
     }
-    return fetchOptions(input);
-  };
+    return fetchLazyLoadOptions(input);
+  }, 500);
 
   const handleChange = (val) => {
     setHasChanges(false);
@@ -107,7 +103,7 @@ const SearchableDropdownField = ({
     'ss-searchable-dropdown-field--lazy-load': lazyLoad
   });
 
-  const optionsProps = lazyLoad ? { loadOptions: getOptions } : { options };
+  const optionsProps = lazyLoad ? { loadOptions: getLazyLoadOptions } : { options };
 
   const noOptionsMessage = (inputValue) => {
     if (inputValue) {
