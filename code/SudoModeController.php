@@ -32,7 +32,7 @@ class SudoModeController extends AdminController
      * A user help documentation link to find out more about sudo mode
      */
     // phpcs:ignore Generic.Files.LineLength.TooLong
-    private static string $help_link = 'https://userhelp.silverstripe.org/en/5/managing_your_website/logging_in/#sudo-mode';
+    private static string $help_link = 'https://userhelp.silverstripe.org/en/6/managing_your_website/logging_in/#sudo-mode';
 
     private ?SudoModeServiceInterface $sudoModeService = null;
 
