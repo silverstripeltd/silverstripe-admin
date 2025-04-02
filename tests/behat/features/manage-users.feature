@@ -24,7 +24,7 @@ Feature: Manage users
       And I press the "View actions" button
       And I press the "Unlink" button, confirming the dialog
       And I wait for 1 seconds
-      Then I should see a "Deleted" success toast
+      Then I should see a "Unlinked" success toast
     Then I click "Groups" in the ".breadcrumbs-wrapper" element
       And I click the "Groups" CMS tab
       And I click "ADMIN group" in the "#Form_EditForm_groups" element
