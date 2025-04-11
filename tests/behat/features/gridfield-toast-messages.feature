@@ -1,7 +1,7 @@
 @retry @job1
 Feature: Show toast messages
   As an author
-  I want to see toast message in the CMS when I create, edit, delete, publish, unpublish, archive a record
+  I want to see toast message in the CMS when I create, edit, delete, unlink, publish, unpublish, archive a record
 
   Background:
     Given the "Company" "Company A" with "Category"="Other"
@@ -47,17 +47,19 @@ Feature: Show toast messages
     Then I should see a "Deleted Employee "Employee A"" success toast
     Then I should not see "Employee A" in the "#Form_ItemEditForm_Employees" element
 
-  Scenario: I can see toast message when I successfully delete a record by clicking the Unlink button in action menu
+  # Clicking the inline "Delete" button in action menu is tested in gridfield-inline-delete.feature
+
+  Scenario: I can see toast message when I successfully unlink a record by clicking the Unlink button in action menu
     When I click "Company C" in the "#Form_EditForm" element
     And I click "Employees" in the ".ui-tabs-nav" element
     Then I should see "Employee A" in the "#Form_ItemEditForm_Employees" element
     And I press the "View actions" button
     And I press the "Unlink" button, confirming the dialog
     And I wait for 1 seconds
-    Then I should see a "Deleted" success toast
+    Then I should see a "Unlinked" success toast
     Then I should not see "Employee A" in the "#Form_ItemEditForm_Employees" element
 
-  Scenario: I can see toast message when I successfully delete a record by clicking the Archive button in action menu
+  Scenario: I can see toast message when I successfully archive a record by clicking the Archive button in action menu
     And I should see "Company A" in the "#Form_EditForm" element
     And I press the "View actions" button
     And I press the "Archive" button, confirming the dialog
