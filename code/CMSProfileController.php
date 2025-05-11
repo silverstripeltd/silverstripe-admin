@@ -59,7 +59,9 @@ class CMSProfileController extends LeftAndMain
 
         // We need to call requireSudoMode() here again, despite it being called in LeftAndMain::getEditForm(),
         // so that the newly added Action goes into readonly mode
-        $form->requireSudoMode();
+        if ($form->getFormRequiresSudoMode()) {
+            $form->requireSudoMode();
+        }
 
         return $form;
     }
