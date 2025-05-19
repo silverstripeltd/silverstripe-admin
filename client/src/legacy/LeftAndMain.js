@@ -1052,13 +1052,26 @@ $.entwine('ss', function($) {
    * Selector must match string in CMSSecurity_success.ss message callback
   */
   $('.leftandmain__login-dialog').entwine({
+    ReactRoot: null,
+
+    onunmatch() {
+      this._super();
+      const root = this.getReactRoot();
+      if (root) {
+        root.unmount();
+        this.setReactRoot(null);
+      }
+    },
+
     destroy() {
       this.close();
       this.remove();
     },
+
     close() {
       this.renderModal(false);
     },
+
     open() {
       this.renderModal(true);
     },
@@ -1074,7 +1087,9 @@ $.entwine('ss', function($) {
       let root = this.getReactRoot();
       if (!root) {
         root = createRoot(this[0]);
+        this.setReactRoot(root);
       }
+      const handleClose = () => this.close();
       root.render(
         <IframeDialog
           title={i18n._t('Admin.CMS_LOGIN_TITLE', 'Login')}
@@ -1083,6 +1098,7 @@ $.entwine('ss', function($) {
           iframeId="login-dialog-iframe"
           iframeClassName="login-dialog__body__iframe"
           isOpen={isOpen}
+          onClosed={handleClose}
           url={url}
         />
       );
