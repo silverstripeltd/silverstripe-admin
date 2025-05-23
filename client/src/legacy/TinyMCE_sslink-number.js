@@ -19,7 +19,7 @@ const plugin = {
         onclick: (editorInst) => editorInst.execCommand(commandName),
         priority: 52,
       },
-      editor.settings.editorIdentifier,
+      editor.getParam('editorIdentifier'),
     ).addCommandWithUrlTest(commandName, /^tel:/);
 
     // Add a command that corresponds with the above menu item
@@ -56,6 +56,8 @@ jQuery.entwine('ss', ($) => {
    * Assumes that $('.insert-link__dialog-wrapper').entwine({}); is defined for shared functions
    */
   $(`#${modalId}`).entwine({
+    ReactRoot: null,
+
     renderModal(isOpen) {
       const handleHide = () => this.close();
       const handleInsert = (...args) => this.handleInsert(...args);
@@ -68,8 +70,6 @@ jQuery.entwine('ss', ($) => {
         root = createRoot(this[0]);
         this.setReactRoot(root);
       }
-
-      // create/update the react component
       root.render(
         <InsertLinkNumberModal
           isOpen={isOpen}
@@ -81,8 +81,7 @@ jQuery.entwine('ss', ($) => {
           fileAttributes={attrs}
           identifier="Admin.InsertLinkNumberModal"
           requireLinkText={requireLinkText}
-        />,
-        this[0]
+        />
       );
     },
 
