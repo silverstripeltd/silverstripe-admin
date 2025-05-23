@@ -66,6 +66,12 @@ class Validator {
       case 'email': {
         return validator.isEmail(value);
       }
+      case 'currency': {
+        // do not attempt to validate currency, due to localisation it
+        // is very difficult to handle every possible scenario so rely on
+        // server-side validation
+        return true;
+      }
       default: {
         // eslint-disable-next-line no-console
         console.warn(`Unknown validation rule used: '${rule}'`);
