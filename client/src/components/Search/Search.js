@@ -58,6 +58,7 @@ class Search extends Component {
     this.clearFormFilter = this.clearFormFilter.bind(this);
     this.focusFormFilter = this.focusFormFilter.bind(this);
     this.formatTagData = this.formatTagData.bind(this);
+    this.onClickOut = this.onClickOut.bind(this);
 
     const term = props.term
       || (props.filters && props.filters[`${props.filterPrefix}${props.name}`])
@@ -67,6 +68,7 @@ class Search extends Component {
       display: props.display,
       searchText: term,
       initialSearchText: term,
+      forceLoadForm: false,
     };
   }
 
@@ -267,6 +269,30 @@ class Search extends Component {
     setTimeout(() => this.focusFirstFormField(selector), 50);
   }
 
+  onClickOut(evt) {
+    // This is a fairly rudimentory way to detect if the user clicked on an entirely different
+    // DOM element, which probably uses jQuery
+    // It's important that we only call show() when a relevent element is clicked, otherwise we'll
+    // end up making lots of unnecessary AJAX requests to the form schema endpoint
+    const buttonEl = evt.target;
+    const $componentEl = window.jQuery(this.nodeRef.container);
+    const filterButtonClicked = buttonEl.matches('#filters-button, .font-icon-search, .filter-open');
+    // The visibility check is needed to avoid loading the form for hidden tabs (e.g. in ModelAdmin)
+    if (filterButtonClicked && $componentEl.is(':visible')) {
+      const buttonGridField = window.jQuery(buttonEl).closest('.grid-field');
+      const componentGridField = $componentEl.closest('.grid-field');
+      if (buttonGridField.length > 0 && componentGridField.length > 0) {
+        // Only show the form for the relevant GridField
+        if (buttonGridField[0] === componentGridField[0]) {
+          this.show();
+        }
+      } else {
+        // This is not a GridField, e.g. for CMSMain
+        this.show();
+      }
+    }
+  }
+
   /**
    * Show the Search box and set the focus on it after a slight delay.
    */
@@ -293,10 +319,10 @@ class Search extends Component {
    * Show this field when the Search Toggle is click.
    */
   show() {
+    this.setState({ forceLoadForm: true });
     if (this.state.display !== DISPLAY.VISIBLE) {
       this.setState({ display: DISPLAY.VISIBLE });
     }
-
     const { schemaName, formData, name, actions } = this.props;
     if (typeof formData[name] !== 'undefined') {
       actions.reduxForm.change(schemaName, name, this.state.searchText);
@@ -441,7 +467,6 @@ class Search extends Component {
 
     // Build classes
     const expanded = this.state.display === DISPLAY.EXPANDED;
-    const visible = this.state.display === DISPLAY.VISIBLE;
 
     // Decide if we display the X button
     const hideable =
@@ -452,7 +477,7 @@ class Search extends Component {
     const clearable = (Object.keys(data).length > 0);
 
     return (
-      <Focusedzone onClickOut={this.show} className="search" ref={node => { this.nodeRef = node; }}>
+      <Focusedzone onClickOut={this.onClickOut} className="search" ref={node => { this.nodeRef = node; }}>
         <SearchBox
           {...props}
           name={`SearchBox__${name}`}
@@ -473,12 +498,11 @@ class Search extends Component {
           onTagClick={this.focusFormFilter}
           tagData={this.formatTagData()}
         >
-
           <SearchForm
             id={formId}
             identifier={identifier}
-            visible={visible}
             expanded={expanded}
+            forceLoadForm={this.state.forceLoadForm}
             formSchemaUrl={formSchemaUrl}
             onSearch={this.doSearch}
             onClear={this.clearFilters}

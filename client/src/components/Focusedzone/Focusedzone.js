@@ -64,9 +64,9 @@ class Focusedzone extends Component {
     this.wasClicked = true;
   }
 
-  handleDocumentClick() {
+  handleDocumentClick(evt) {
     if (!this.wasClicked) {
-      this.props.onClickOut();
+      this.props.onClickOut(evt);
     }
     this.wasClicked = false;
   }
