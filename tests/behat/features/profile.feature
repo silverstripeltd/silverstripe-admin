@@ -46,16 +46,27 @@ Feature: Manage my own settings
   Scenario: I can't create poor quality passwords
     Given I follow "Change Password"
     And I fill in "Current Password" with "secret"
-    And I fill in "New Password" with "a"
-    And I fill in "Confirm Password" with "a"
-    And I press the "Save" button
+    And I fill in "New Password" with "password"
+    And I wait for 1 second
+    Then I should see "Password strength: Very weak"
+    And I should see "The password strength is too low. Please use a stronger password."
+    When I fill in "New Password" with "red-dinosaur"
+    And I wait for 1 second
+    Then I should see "Password strength: Weak"
+    And I should see "The password strength is too low. Please use a stronger password."
+    When I fill in "Confirm Password" with "red-dinosaur"
+    When I press the "Save" button
+    And I wait for 2 seconds
     Then I should see "The password strength is too low. Please use a stronger password."
 
   Scenario: I can change my password
     Given I follow "Change Password"
     And I fill in "Current Password" with "secret"
     And I fill in "New Password" with "the-quick-brown-fox"
-    And I fill in "Confirm Password" with "the-quick-brown-fox"
+    And I wait for 1 second
+    Then I should see "Password strength: Strong"
+    And I should not see "The password strength is too low. Please use a stronger password."
+    When I fill in "Confirm Password" with "the-quick-brown-fox"
     And I press the "Save" button
     And I am not logged in
     When I log in with "joe@example.org" and "the-quick-brown-fox"
