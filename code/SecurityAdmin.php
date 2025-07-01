@@ -71,11 +71,11 @@ class SecurityAdmin extends ModelAdmin implements PermissionProvider
         foreach ($models as $key => $spec) {
             switch ($spec['dataClass']) {
                 case Member::class:
-                    $spec['title'] = _t(__CLASS__ . '.Users', 'Users');
+                    $models[$key]['title'] = _t(__CLASS__ . '.Users', 'Users');
                     break;
                 case Group::class:
                 case PermissionRole::class:
-                    $spec['title'] = singleton($spec['dataClass'])->i18n_plural_name();
+                    $models[$key]['title'] = singleton($spec['dataClass'])->i18n_plural_name();
             }
         }
         return $models;
