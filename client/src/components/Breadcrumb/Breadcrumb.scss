@@ -86,13 +86,13 @@
 }
 
 .breadcrumb__icon:before {
-  margin-left: 1rem;
   font-size: 1.5rem;
   cursor: pointer;
 }
 
 .breadcrumb__icon {
   margin-top: 5px;
+  margin-left: 1rem;
 }
 
 .breadcrumb__icon.file-status-icon {
