@@ -90,6 +90,19 @@
     background-repeat: no-repeat !important;
     background-size: auto !important;
   }
+
+  /**
+   * These two rules are here to fix a bug where the Gridfield autocomplete dropdown triggers a scrollbar on mouse over
+   */
+  .ui-menu-item-wrapper {
+    /** Forces a none-border on unselected dropdown items */
+    border: 1px solid transparent;
+  }
+
+  &.ui-menu .ui-state-active {
+    /** Suppress the native jQuery UI styles that tries to compensate for the border that gets addeed on mouse over */
+    margin: 0;
+  }
 }
 
 .ui-tabs .ui-tabs-nav .ui-tabs-anchor {
