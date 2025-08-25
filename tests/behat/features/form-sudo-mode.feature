@@ -134,3 +134,7 @@ Feature: Form sudo mode
     And I should see a "#Form_EditForm_HasManyMembers .new-link" element
     And I should see a "#Form_EditForm_ManyManyMembers .new-link" element
 
+  Scenario: Clicking "verify to continue" moves focus to the password field
+    When I go to "/admin/myprofile"
+    And I click on the ".sudo-mode-password-field__notice-button" element
+    Then the "#SudoModePassword" element should have focus

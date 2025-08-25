@@ -137,6 +137,7 @@ function SudoModePasswordField(props) {
       autoComplete: autocomplete,
       onKeyDown: (evt) => handleVerifyKeyDown(evt),
       innerRef: passwordFieldRef,
+      autoFocus: true,
     };
     const validationProps = responseMessage ? { valid: false, invalid: true } : {};
     return <div className="sudo-mode-password-field__verify">
