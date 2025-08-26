@@ -1011,10 +1011,6 @@ html, body {
 }
 
 /**
- * DEPRECATED:
- * .cms-content-tools and ui-widget will be removed in 4.0
- * Use .cms-content-filters instead.
- *
  * Content Tools is the sidebar on the left of the main content
  * panel
  */
@@ -1331,32 +1327,16 @@ form.member-profile-form {
     justify-content: flex-end;
     padding: 0;
 
-    .toggle-collapse,
-    .toggle-expand {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      text-align: right;
-      text-decoration: none;
-
-      &:hover {
-        background-color: $base-menu;
-      }
-
-      span {
-        display: inline-block;
-        margin: 0 8px;
+    .cms-panel-toggle__button {
+        border: 0;
+        background-color: transparent;
+        padding: 0 8px;
         color: $gray-600;
         font-size: 18px;
-      }
-    }
 
-    .toggle-collapse {
-      display: flex;
-    }
-
-    .toggle-expand {
-      display: none;
+        &:hover {
+          background-color: $base-menu;
+        }
     }
   }
 

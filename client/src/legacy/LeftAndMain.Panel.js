@@ -12,16 +12,26 @@ $.entwine('ss', function($) {
    * - Container div: The outer element, with class ".cms-panel"
    * - Header (optional)
    * - Content
-   * - Expand and collapse toggle anchors (optional)
+   * - Panel toggle (optional)
    *
    * Sample HTML:
+   *
    * <div class="cms-panel">
-   *  <div class="cms-panel-header">your header</div>
+   *   <div class="cms-panel-header">your header</div>
    *   <div class="cms-panel-content">your content here</div>
-   *  <div class="cms-panel-toggle">
-   *     <a href="#" class="toggle-expande">your toggle text</a>
-   *     <a href="#" class="toggle-collapse">your toggle text</a>
-   *  </div>
+   *   <div class="cms-panel-toggle">
+   *     <button
+   *       class="cms-panel-toggle__button"
+   *       title="<%t SilverStripe\\Admin\\LeftAndMain.CollapsePanel "Collapse panel" %>"
+   *       data-bs-toggle="tooltip"
+   *       aria-expanded="true"
+   *       aria-controls="cms-menu"
+   *       data-expanded-label="&laquo;"
+   *       data-expanded-title="<%t SilverStripe\\Admin\\LeftAndMain.CollapsePanel "Collapse panel" %>"
+   *       data-collapsed-label="&raquo;"
+   *       data-collapsed-title="<%t SilverStripe\\Admin\\LeftAndMain.ExpandPanel "Expand panel" %>"
+   *     >&laquo;</button>
+   *   </div>
    * </div>
    */
   $('.cms-panel').entwine({
@@ -96,27 +106,39 @@ $.entwine('ss', function($) {
     },
 
     onadd: function() {
-      var collapsedContent, container;
-
-      if(!this.find('.cms-panel-content').length) throw new Exception('Content panel for ".cms-panel" not found');
+      if(!this.find('.cms-panel-content').length) {
+        throw new Exception('Content panel for ".cms-panel" not found');
+      }
 
       // Create default controls unless they already exist.
+      // This is here for backwards compatibility reasons and should be removed in a future major release
       if(!this.find('.cms-panel-toggle').length) {
-        container = $("<div class='toolbar toolbar--south cms-panel-toggle'></div>")
-          .append('<a class="toggle-expand" href="#" data-bs-toggle="tooltip" title="'+
-              i18n._t('Admin.EXPANDPANEL', 'Expand Panel') +'"><span>&raquo;</span></a>')
-          .append('<a class="toggle-collapse" href="#" data-bs-toggle="tooltip" title="'+
-              i18n._t('Admin.COLLAPSEPANEL', 'Collapse Panel') +'"><span>&laquo;</span></a>');
-
-        this.append(container);
+        const expandedTitle = i18n._t('Admin.COLLAPSEPANEL', 'Collapse Panel');
+        const collapsedTitle = i18n._t('Admin.EXPANDPANEL', 'Expand Panel');
+        const expandedLabel = '&laquo;'
+        const collapsedLabel = '&raquo;'
+        const panelToggle = $(`<div class='toolbar toolbar--south cms-panel-toggle'>
+          <button
+            class="cms-panel-toggle__button"
+            title="${expandedTitle}"
+            data-bs-toggle="tooltip"
+            aria-expanded="true"
+            aria-controls="cms-menu"
+            data-expanded-label="${expandedLabel}"
+            data-expanded-title="${expandedTitle}"
+            data-collapsed-label="${collapsedLabel}"
+            data-collapsed-title="${collapsedTitle}"
+          >${expandedLabel}</button>
+        </div>`);
+        this.append(panelToggle);
       }
 
       // Set panel width same as the content panel it contains. Assumes the panel has overflow: hidden.
       this.setWidthExpanded(this.find('.cms-panel-content').innerWidth());
 
       // Assumes the collapsed width is indicated by the toggle, or by an optionally collapsed view
-      collapsedContent = this.find('.cms-panel-content-collapsed');
-      this.setWidthCollapsed(collapsedContent.length ? collapsedContent.innerWidth() : this.find('.toggle-expand').innerWidth());
+      const collapsedContent = this.find('.cms-panel-content-collapsed');
+      this.setWidthCollapsed(collapsedContent.length ? collapsedContent.innerWidth() : this.find('.cms-panel-toggle__button').innerWidth());
 
       // Toggle visibility
       this.togglePanel(!this.getInitialCollapsedState(), true, false);
@@ -157,6 +179,22 @@ $.entwine('ss', function($) {
 
       this.trigger('toggle', doExpand);
       this.trigger(doExpand ? 'expand' : 'collapse');
+
+      // Update decendant button
+      const button = this.find('.cms-panel-toggle__button');
+      if (doExpand) {
+        const title = button.attr('data-expanded-title');
+        button.attr('aria-expanded', 'true');
+        button.attr('aria-label', title)
+        button.attr('title', title);
+        button.html(button.attr('data-expanded-label'));
+      } else {
+        const title = button.attr('data-collapsed-title');
+        button.attr('aria-expanded', 'false');
+        button.attr('aria-label', title)
+        button.attr('title', title);
+        button.html(button.attr('data-collapsed-label'));
+      }
     },
 
     expandPanel: function(force) {
@@ -172,37 +210,18 @@ $.entwine('ss', function($) {
     }
   });
 
-  $('.cms-panel.collapsed .cms-panel-toggle').entwine({
-    onclick: function(e) {
-      this.expandPanel();
-      e.preventDefault();
-    }
-  });
-
   $('.cms-panel *').entwine({
     getPanel: function() {
       return this.parents('.cms-panel:first');
     }
   });
 
-  $('.cms-panel .toggle-expand').entwine({
+  $('.cms-panel .cms-panel-toggle__button').entwine({
     onclick: function(e) {
       e.preventDefault();
       e.stopPropagation();
-
-      this.getPanel().expandPanel();
-
-      this._super(e);
-    }
-  });
-
-  $('.cms-panel .toggle-collapse').entwine({
-    onclick: function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      this.getPanel().collapsePanel();
-
+      const doExpand = this.attr('aria-expanded') === 'false';
+      this.closest('.cms-panel').togglePanel(doExpand);
       this._super(e);
     }
   });
