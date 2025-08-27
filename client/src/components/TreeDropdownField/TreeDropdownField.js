@@ -670,7 +670,12 @@ class TreeDropdownField extends Component {
 
     return (
       <div className={className}>
-        <span className="treedropdownfield__title">{title}</span>
+        <span
+          className="treedropdownfield__title"
+          role="textbox"
+          aria-readonly="true"
+          tabIndex="0"
+        >{title}</span>
         <Input
           type="hidden"
           name={this.props.name}
