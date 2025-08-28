@@ -70,6 +70,7 @@ class CheckboxSet extends Component {
       onChange: this.handleChange,
       value: values.indexOf(`${item.value}`) > -1,
       title: item.title,
+      role: 'option',
       type: 'checkbox',
     };
   }
@@ -103,7 +104,7 @@ class CheckboxSet extends Component {
       return null;
     }
     return (
-      <div>
+      <div role="listbox">
         { this.props.source.map((item, index) => (
           <OptionField {...this.getOptionProps(item, index)} hideLabels />
         )) }

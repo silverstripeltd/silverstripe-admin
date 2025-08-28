@@ -45,6 +45,7 @@ class OptionsetField extends Component {
       value: `${this.props.value}` === `${item.value}`,
       title: item.title,
       type: 'radio',
+      role: 'option',
     };
   }
 
@@ -70,7 +71,7 @@ class OptionsetField extends Component {
       return null;
     }
     return (
-      <div>
+      <div role="listbox">
         { this.props.source.map((item, index) => (
           <OptionField {...this.getOptionProps(item, index)} hideLabels />
         )) }

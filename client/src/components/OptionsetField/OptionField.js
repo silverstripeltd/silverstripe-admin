@@ -24,8 +24,7 @@ class OptionField extends Component {
       disabled: this.props.readOnly,
       'option-field--disabled': this.props.readOnly || this.props.disabled,
     });
-
-    return {
+    const inputProps = {
       id: this.props.id,
       type: this.props.type,
       name: this.props.name,
@@ -36,6 +35,10 @@ class OptionField extends Component {
       checked: !!this.props.value,
       value: 1,
     };
+    if (this.props.role) {
+      inputProps.role = this.props.role;
+    }
+    return inputProps;
   }
 
   /**
@@ -88,6 +91,7 @@ class OptionField extends Component {
 
 OptionField.propTypes = {
   type: PropTypes.oneOf(['checkbox', 'radio']),
+  role: PropTypes.string,
   leftTitle: PropTypes.any,
   rightTitle: PropTypes.any,
   title: PropTypes.any,
