@@ -48,6 +48,30 @@ html, body {
   }
 }
 
+.cms-container-skip-link {
+  display: block;
+  position: absolute;
+
+  // Uses off screen hiding instead of `visibility:hidden;` or `display: none;`
+  // so that the element is fully accessible
+  top: -100px; 
+  left: 3px;
+  background: $base-menu;
+  color: $gray-700;
+  padding: $spacer * 0.75;
+  z-index: 100;
+
+  &:focus {
+    top: 3px;
+  }
+}
+
+.cms-container-skip-link-target {
+  display: flex;
+  height: 100%;
+  width: 100vw;
+}
+
 .cms-container--content-mode {
   .cms-preview {
     display: none;
