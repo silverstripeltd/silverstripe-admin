@@ -1462,6 +1462,36 @@ $.entwine('ss', function($) {
   });
 
   /**
+   * CMS skip link - accessible feature to skip the left-hand nav
+   */
+  $('.cms-container-skip-link').entwine({
+    onclick: function (e) {
+      // Prevent the browser from changing the URL.
+      e.preventDefault();
+      const match = e.target.href.match(/#(.+)$/);
+      // 1. Check that the href has a #hash component.
+      if (!match || !match[1]) {
+        // Use console.error instead of throwing an error, which can halt other JS.
+        console.error("Skip link error: Could not extract an ID from the href", e.target);
+        return;
+      }
+      const id = match[1];
+      const targetElement = document.getElementById(id);
+      // 2. Check that the target element actually exists on the page.
+      if (!targetElement) {
+        console.error(`Skip link error: Could not find element with ID "${id}"`);
+        return;
+      }
+      // 3. Check that the target is properly configured to be focusable.
+      if (targetElement.getAttribute('tabindex') !== '-1') {
+        console.error(`Skip link error: Element with ID "${id}" is not focusable. It must have tabindex="-1"`);
+        return;
+      }
+      targetElement.focus();
+    },
+  });
+
+  /**
    * CMS content filters
    */
   $('.view-controls :button[name=showFilter]').entwine({
