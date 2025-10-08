@@ -130,6 +130,111 @@ $.entwine('ss.tree', function($){
             // Clear out namespace before triggering so entwine handlers are called
             e.namespace = '';
             $(document).triggerHandler(e, data);
+          })
+          .on('keydown', function(e) {
+            var key = e.key;
+            var target = e.target;
+
+            // Helper to get the direct anchor (<a>) for a li node
+            var getDirectAnchor = function($li) {
+              var a = $li.children('a')[0];
+              return a || null;
+            };
+
+            // Find previous visible node for ArrowUp
+            var getPrevVisible = function($li) {
+              // previous sibling's deepest visible descendant
+              var $prev = $li.prev('li');
+              if ($prev.length) {
+                while ($prev.hasClass('jstree-open') && $prev.find('> ul > li').length) {
+                  $prev = $prev.find('> ul > li').last();
+                }
+                return getDirectAnchor($prev);
+              }
+              // otherwise parent
+              var $parent = $li.parents('li').first();
+              if ($parent.length) {
+                return getDirectAnchor($parent);
+              }
+              return null;
+            };
+
+            // Find next visible node for ArrowDown
+            var getNextVisible = function($li) {
+              // first child if open
+              if ($li.hasClass('jstree-open')) {
+                var $child = $li.find('> ul > li').first();
+                if ($child.length) {
+                  return getDirectAnchor($child);
+                }
+              }
+              // next sibling
+              var $next = $li.next('li');
+              if ($next.length) {
+                return getDirectAnchor($next);
+              }
+              // next ancestor sibling
+              var $ancestors = $li.parents('li');
+              for (var i = 0; i < $ancestors.length; i++) {
+                var $ancestor = $($ancestors[i]);
+                var $nextAncestor = $ancestor.next('li');
+                if ($nextAncestor.length) {
+                  return getDirectAnchor($nextAncestor);
+                }
+              }
+              return null;
+            };
+
+            // Handle key events
+            var $li = $(target).closest('li');
+            if (key === 'Enter') {
+              // Enter already follows links, though for
+              // toggle icons (defined as .jstree-icon), it toggles
+              if ($(target).hasClass('jstree-icon')) {
+                $(this).jstree('toggle_node', $li);
+              }
+            } else if (key === ' ') {
+              // Pressing space toggles show/hide children if on the icon
+              // But not if on a link, as space will likely be used to move
+              // the page, as this is currently what's used on elemental
+              if ($(target).hasClass('jstree-icon')) {
+                $(this).jstree('toggle_node', $li);
+              }
+            } else if (key === 'ArrowLeft') {
+              $(this).jstree('close_node', $li);
+            } else if (key === 'ArrowRight') {
+              $(this).jstree('open_node', $li);
+            } else if (key === 'ArrowUp') {
+              var prev = getPrevVisible($li);
+              if (prev) {
+                prev.focus();
+              }
+            } else if (key === 'ArrowDown') {
+              var next = getNextVisible($li);
+              if (next) {
+                next.focus();
+              }
+            } else if (key === 'PageUp') {
+              // Focus on first sibling
+              var $siblings = $li.parent().children('li');
+              if ($siblings.length) {
+                var first = $siblings.first();
+                var fa = getDirectAnchor(first);
+                if (fa) {
+                  fa.focus();
+                }
+              }
+            } else if (key === 'PageDown') {
+              // Focus on last sibling
+              var $siblings = $li.parent().children('li');
+              if ($siblings.length) {
+                var last = $siblings.last();
+                var la = getDirectAnchor(last);
+                if (la) {
+                  la.focus();
+                }
+              }
+            }
           });
     },
     onremove: function(){

@@ -65,3 +65,100 @@ Feature: Accessibility
     And the ".cms-container-skip-link-target" element should have focus
     When I press the "Tab" key globally
     And the ".ui-tabs-tab[aria-controls='Root_Main']" element should have focus
+
+  Scenario: Site tree keyboard navigation
+    Given a "Page" "Page 1"
+    And a "Page" "Page 2"
+    And the "Page" "Page 2a" is a child of a "Page" "Page 2"
+    And the "Page" "Page 2b" is a child of a "Page" "Page 2"
+    And the "Page" "Page 2bi" is a child of a "Page" "Page 2b"
+    And the "Page" "Page 2bii" is a child of a "Page" "Page 2b"
+    And the "Page" "Page 2biii" is a child of a "Page" "Page 2b"
+    And the "Page" "Page 2c" is a child of a "Page" "Page 2"
+    And a "Page" "Page 3"
+    And I am logged in with "ADMIN" permissions
+    And I go to "/admin/pages"
+
+    # Move focus to the element before the site tree so we have a known starting point
+    When I focus on the "a[data-view='listview']" element
+    And I press the "Tab" key globally
+    Then the ".jstree-no-checkboxes > .nodelete > .jstree-icon" element should have focus
+    When I press the "Tab" key globally
+    Then the "a[title='(Record type: Page) Page 1']" element should have focus
+
+    # Pages and toggle icon each receive tab focus
+    When I press the "Tab" key globally
+    Then the ".jstree-closed .jstree-icon" element should have focus
+    When I press the "Tab" key globally
+    Then the "a[title='(Record type: Page) Page 2']" element should have focus
+    When I press the "Tab" key globally
+    Then the "a[title='(Record type: Page) Page 3']" element should have focus
+
+    # Up moves to previous sibling and skips toggle
+    When I press the "Up" key globally
+    Then the "a[title='(Record type: Page) Page 2']" element should have focus
+    When I press the "Up" key globally
+    Then the "a[title='(Record type: Page) Page 1']" element should have focus
+
+    # Down moves to next sibling
+    When I press the "Down" key globally
+    Then the "a[title='(Record type: Page) Page 2']" element should have focus
+
+    # Right arrow opens node if closed, focus stays on parent
+    When I press the "Right" key globally
+    Then I should see "Page 2a"
+    And the "a[title='(Record type: Page) Page 2']" element should have focus
+
+    # Left arrow closes node if open
+    When I press the "Left" key globally
+    Then I should not see "Page 2a"
+    And the "a[title='(Record type: Page) Page 2']" element should have focus
+
+    # Both Enter and Space on icon toggles node open/closed tab to icon
+    When I press the "Shift-Tab" key globally
+    Then the ".jstree-closed .jstree-icon" element should have focus
+    When I press the "Enter" key globally
+    Then I should see "Page 2a"
+    When I press the "Enter" key globally
+    Then I should not see "Page 2a"
+    When I press the "Space" key globally
+    Then I should see "Page 2a"
+
+    # PageUp/PageDown moves to first/last sibling
+    When I press the "Tab" key globally
+    When I press the "Tab" key globally
+    And the "a[title='(Record type: Page) Page 2a']" element should have focus
+    When I press the "Page_Down" key globally
+    Then the "a[title='(Record type: Page) Page 2c']" element should have focus
+    When I press the "Page_Up" key globally
+    Then the "a[title='(Record type: Page) Page 2a']" element should have focus
+
+    # Can open nested children
+    When I press the "Down" key globally
+    And the "a[title='(Record type: Page) Page 2b']" element should have focus
+    When I press the "Right" key globally
+    Then I should see "Page 2bi"
+
+    # Up + Down moves through all visible nodes
+    When I press the "Up" key globally
+    Then the "a[title='(Record type: Page) Page 2a']" element should have focus
+    When I press the "Up" key globally
+    Then the "a[title='(Record type: Page) Page 2']" element should have focus
+    When I press the "Up" key globally
+    Then the "a[title='(Record type: Page) Page 1']" element should have focus
+    When I press the "Down" key globally
+    Then the "a[title='(Record type: Page) Page 2']" element should have focus
+    When I press the "Down" key globally
+    Then the "a[title='(Record type: Page) Page 2a']" element should have focus
+    When I press the "Down" key globally
+    Then the "a[title='(Record type: Page) Page 2b']" element should have focus
+    When I press the "Down" key globally
+    Then the "a[title='(Record type: Page) Page 2bi']" element should have focus
+    When I press the "Down" key globally
+    Then the "a[title='(Record type: Page) Page 2bii']" element should have focus
+    When I press the "Down" key globally
+    Then the "a[title='(Record type: Page) Page 2biii']" element should have focus
+    When I press the "Down" key globally
+    Then the "a[title='(Record type: Page) Page 2c']" element should have focus
+    When I press the "Down" key globally
+    Then the "a[title='(Record type: Page) Page 3']" element should have focus
