@@ -525,6 +525,116 @@ $.entwine('ss', function($){
   });
 
   /**
+   * Handle keyboard navigation in tabsets
+   */
+  function handleKeyboardNav(e, parentSelector, $el) {
+    e.preventDefault();
+    if (window.keyboardNavDebounce) {
+      clearTimeout(window.keyboardNavDebounce);
+    }
+    const $tabs = $el.closest(parentSelector).find('.ui-tabs-tab');
+    let $targetTab;
+    if (e.key === 'ArrowLeft') {
+      const index = $tabs.index($el);
+      const newIndex = index > 0 ? index - 1 : $tabs.length - 1;
+      $targetTab = $tabs.eq(newIndex);
+    } else if (e.key === 'ArrowRight') {
+      const index = $tabs.index($el);
+      const newIndex = index < $tabs.length - 1 ? index + 1 : 0;
+      $targetTab = $tabs.eq(newIndex);
+    } else if (['ArrowUp', 'ArrowDown'].includes(e.key)) {
+      // Counteract jquery-ui tab default behaviour which to to have up behave like left, and down like right
+      // According to https://www.w3.org/WAI/ARIA/apg/patterns/tabs/ Keyboard Interaction Notes 3
+      // "If the tab list is horizontal, it does not listen for Down Arrow or Up Arrow so those keys can
+      // provide their normal browser scrolling functions even when focus is inside the tab list."
+      // It's assumed that all tab lists in the CMS are horizontal, so we disable up/down navigation
+      // Note that for the primary tabset, this will not trigger a redundant pjax request
+      const index = $tabs.index($el);
+      $targetTab = $tabs.eq(index);
+    } else if (e.key === 'Home') {
+      $targetTab = $tabs.first();
+    } else if (e.key === 'End') {
+      $targetTab = $tabs.last();
+    } else {
+      return;
+    }
+    $targetTab.focus();
+    // Debounce so that the user is able to quickly navigate through tabs without triggering a reload
+    // using 300 milliseconds as that is the seems like it's the same that jquery-ui tabs uses
+    window.keyboardNavDebounce = setTimeout(() => {
+      const $targetTabLink = $targetTab.find('a');
+      if ($targetTabLink && $targetTabLink.length) {
+        window.sessionStorage.setItem('keyboardNavDebounce', $targetTabLink.attr('href'));
+        $targetTabLink.trigger('click');
+      }
+    }, 300);
+  }
+
+  /**
+   * Restore focus to active tab if it was set by keyboard navigation after pjax reload
+   */
+  function restoreFocusToActiveTab($el) {
+    const href = window.sessionStorage.getItem('keyboardNavDebounce');
+    if (href && href === $el.find('a')?.attr('href')) {
+      $el.trigger('focus');
+      window.sessionStorage.removeItem('keyboardPrimaryTabNav');
+    }
+  }
+
+  /**
+   * Add support for key navigation between tabs on the primary/main tab nav
+   *
+   * Prior to this, arrow keys worked on the primary tabset but they did not load the tab
+   * That functionality was disabled in LeftAndMain.js in the `$('.cms-tabset').entwine({` block,
+   * presumably because the default jquery-ui behaviour didn't work well with our custom tabs.
+   * PageUp and PageDown did not work at all, so we add support for those here too
+   */
+  $('.cms-tabset-nav-primary .ui-tabs-tab').entwine({
+    onkeydown: function(e) {
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) {
+        handleKeyboardNav(e, '.cms-tabset-nav-primary', this);
+      }
+      this._super(e);
+    }
+  });
+  
+  /**
+   * Restore focus to primary active tab if it was set by keyboard navigation after pjax reload
+   */
+  $('.cms-tabset-nav-primary .ui-tabs-tab.ui-state-active').entwine({
+    onmatch: function() {
+      restoreFocusToActiveTab(this);
+      this._super();
+    },
+  });
+
+  /**
+   * Add support for key navigation between tabs on the primary/main tab nav
+   *
+   * Note that prior to this, arrow keys did work on secondary tabsets, presumably
+   * set by jquery-ui tabs, and they did auto load the panel, though PageUp and PageDown did not.
+   * In order to get everything working consistently, we handle all keys here
+   */
+  $('.cms-edit-form .ss-tabset .ui-tabs-tab').entwine({
+    onkeydown: function(e) {
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) {
+        handleKeyboardNav(e, '.ss-tabset', this);
+      }
+      this._super(e);
+    },
+  });
+
+  /**
+   * Restore focus to secondaru active tab if it was set by keyboard navigation after pjax reload
+   */
+  $('.cms-edit-form .ss-tabset .ui-tabs-tab.ui-state-active').entwine({
+    onmatch: function() {
+      restoreFocusToActiveTab(this);
+      this._super();
+    },
+  });
+
+  /**
    * Hide tabs when only one is available.
    * Special case is actiontabs - tabs between buttons, where we want to have
    * extra options hidden within a tab (even if only one) by default.

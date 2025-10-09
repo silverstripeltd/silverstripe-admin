@@ -162,3 +162,106 @@ Feature: Accessibility
     Then the "a[title='(Record type: Page) Page 2c']" element should have focus
     When I press the "Down" key globally
     Then the "a[title='(Record type: Page) Page 3']" element should have focus
+
+  Scenario: Tab navigation on page using keyboard loads focused tab
+    Given a "BasicFieldsTestPage" "My page"
+    And I am logged in with "ADMIN" permissions
+    And I go to "/admin/pages"
+    And I click on "My page" in the tree
+    And I click on the "#Form_EditForm_Title" element
+
+    # Secondary nav tabs aka panel navigation i.e. tabs within edit form
+    And I press the "Shift-Tab" key globally
+    Then the ".panel .nav-item:nth-of-type(1)" element should have focus
+    And I should see "Page name"
+    And I should not see "Required field"
+    And I should not see "multiUpload"
+    When I press the "Right" key globally
+    Then the ".panel .nav-item:nth-of-type(2)" element should have focus
+    And I should not see "Page name"
+    And I should see "Required field"
+    And I should not see "multiUpload"
+    When I press the "Left" key globally
+    Then the ".panel .nav-item:nth-of-type(1)" element should have focus
+    And I should see "Page name"
+    And I should not see "Required field"
+    And I should not see "multiUpload"
+    When I press the "End" key globally
+    Then the ".panel .nav-item:nth-of-type(6)" element should have focus
+    And I should not see "Page name"
+    And I should not see "Required field"
+    And I should see "multiUpload"
+    When I press the "Home" key globally
+    Then the ".panel .nav-item:nth-of-type(1)" element should have focus
+    And I should see "Page name"
+    And I should not see "Required field"
+    And I should not see "multiUpload"
+    When I press the "Tab" key globally
+    Then the "#Form_EditForm_Title" element should have focus
+
+    # Primary nav tabs i.e. Main/Settings/History tabs
+    When I press the "Shift-Tab" key globally
+    When I press the "Shift-Tab" key globally
+    Then the ".cms-tabset-nav-primary .nav-item:nth-of-type(1)" element should have focus
+    And I should see "Page name"
+    And I should not see "Page location"
+    And I should not see "Recard"
+    When I press the "Right" key globally
+    Then the ".cms-tabset-nav-primary .nav-item:nth-of-type(2)" element should have focus
+    And I should not see "Page name"
+    And I should see "Page location"
+    And I should not see "Record"
+    When I press the "Left" key globally
+    Then the ".cms-tabset-nav-primary .nav-item:nth-of-type(1)" element should have focus
+    And I should see "Page name"
+    And I should not see "Page location"
+    And I should not see "Record"
+    When I press the "End" key globally
+    Then the ".cms-tabset-nav-primary .nav-item:nth-of-type(3)" element should have focus
+    And I should not see "Page name"
+    And I should not see "Required field"
+    And I should see "Record"
+    When I press the "Home" key globally
+    Then the ".cms-tabset-nav-primary .nav-item:nth-of-type(1)" element should have focus
+    And I should see "Page name"
+    And I should not see "Required field"
+    And I should not see "Record"
+    When I press the "Tab" key globally
+    And I press the "Tab" key globally
+    Then the "#Form_EditForm_Title" element should have focus
+
+  Scenario: Tab navigation on dataobject edit form using keyboard loads focused tab
+    # Note - not testing panel navigation because it's the same as the one page uses above
+    Given the "Company" "Company A"
+    And the "Employee" "Employee A" with "Company"="1"
+    And I am logged in with "ADMIN" permissions
+    When I go to "/admin/test"
+    And I click on the ".col-Name" element
+    And I click on the "#Form_ItemEditForm_Name" element
+    And I press the "Shift-Tab" key globally
+    Then the ".cms-tabset-nav-primary .ui-tabs-tab:nth-of-type(1)" element should have focus
+    And I should see "Revenue"
+    And I should not see "Employee A"
+    And I should not see "No items found"
+    When I press the "Right" key globally
+    Then the ".cms-tabset-nav-primary .ui-tabs-tab:nth-of-type(2)" element should have focus
+    And I should not see "Revenue"
+    And I should see "Employee A"
+    And I should not see "No items found"
+    When I press the "Left" key globally
+    Then the ".cms-tabset-nav-primary .ui-tabs-tab:nth-of-type(1)" element should have focus
+    And I should see "Revenue"
+    And I should not see "Employee A"
+    And I should not see "No items found"
+    When I press the "End" key globally
+    Then the ".cms-tabset-nav-primary .ui-tabs-tab:nth-of-type(3)" element should have focus
+    And I should not see "Revenue"
+    And I should not see "Employee A"
+    And I should see "No items found"
+    When I press the "Home" key globally
+    Then the ".cms-tabset-nav-primary .ui-tabs-tab:nth-of-type(1)" element should have focus
+    And I should see "Revenue"
+    And I should not see "Employee A"
+    And I should not see "No items found"
+    When I press the "Tab" key globally
+    Then the "#Form_ItemEditForm_Name" element should have focus
