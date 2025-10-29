@@ -577,7 +577,7 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
     public function show(HTTPRequest $request): HTTPResponse
     {
         if ($request->param('ID')) {
-            $this->setCurrentRecordID($request->param('ID'));
+            $this->setCurrentRecordID((int) $request->param('ID'));
         }
         return $this->getResponseNegotiator()->respond($request);
     }
