@@ -19,7 +19,13 @@ export const toastShape = {
 /**
  * Display an individual toast
  */
-const Toast = ({ type, text, onDismiss, dismissed, actions }) => {
+const Toast = ({
+  type,
+  text,
+  onDismiss = () => {},
+  dismissed,
+  actions = []
+}) => {
   // handler for close button
   const toggle = (e) => {
     e.preventDefault();
@@ -48,11 +54,6 @@ const Toast = ({ type, text, onDismiss, dismissed, actions }) => {
 Toast.propTypes = {
   ...toastShape,
   onDismiss: PropTypes.func
-};
-
-Toast.defaultProps = {
-  actions: [],
-  onDismiss: () => {},
 };
 
 export default Toast;

@@ -16,7 +16,9 @@ import { v4 as uuid } from 'uuid';
  * the dash offset. That's what's actually animated to create the illusion
  * that the paths are being "drawn".
  */
-function Loading({ containerClass }) {
+function Loading({
+  containerClass = 'flexbox-area-grow'
+}) {
   // If we are displaying many loading indicators at the same time, we need to have a unique ID.
   // The ID does not need to be the same each time this component renders.
   const id = uuid();
@@ -89,10 +91,6 @@ function Loading({ containerClass }) {
 
 Loading.propTypes = {
   containerClass: PropTypes.string,
-};
-
-Loading.defaultProps = {
-  containerClass: 'flexbox-area-grow',
 };
 
 export default Loading;

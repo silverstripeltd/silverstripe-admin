@@ -1,7 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const LabelField = ({ id, className, title, extraClass, data }) => {
+const LabelField = ({
+  id,
+  className = '',
+  title,
+  extraClass = '',
+  data
+}) => {
   const htmlFor = data && data.target;
   const classes = `form-label ${className} ${extraClass}`;
 
@@ -18,11 +24,6 @@ LabelField.propTypes = {
   data: PropTypes.shape({
     target: PropTypes.string,
   }),
-};
-
-LabelField.defaultProps = {
-  className: '',
-  extraClass: '',
 };
 
 export default LabelField;

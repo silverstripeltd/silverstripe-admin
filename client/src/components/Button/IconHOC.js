@@ -7,7 +7,11 @@ import classnames from 'classnames';
  * it to a matching class.
  */
 const IconHOC = (Component) => {
-  const IconComponent = ({ icon, className, ...props }) =>
+  const IconComponent = ({
+    icon,
+    className,
+    ...props
+  }) =>
     (<Component
       className={classnames(className, icon && `font-icon-${icon}`)}
       {...props}
@@ -18,7 +22,6 @@ const IconHOC = (Component) => {
     icon: PropTypes.string
   };
 
-  IconComponent.defaultProps = Component.defaultProps;
   IconComponent.displayName = Component.name;
 
   return IconComponent;

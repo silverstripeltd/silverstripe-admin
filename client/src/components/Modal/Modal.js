@@ -28,14 +28,14 @@ function parseTitle(title) {
 const Modal = ({
   children,
   className,
-  isOpen,
+  isOpen = false,
   modalClassName,
-  ModalComponent,
-  ModalHeaderComponent,
+  ModalComponent = ReactStrapModal,
+  ModalHeaderComponent = ReactStrapModalHeader,
   onClosed,
   showCloseButton,
   size,
-  title,
+  title = null,
 }) => (
   <ModalComponent
     isOpen={isOpen}
@@ -82,13 +82,6 @@ Modal.propTypes = {
     PropTypes.bool,
     PropTypes.shape({ html: PropTypes.string })
   ]),
-};
-
-Modal.defaultProps = {
-  isOpen: false,
-  ModalComponent: ReactStrapModal,
-  ModalHeaderComponent: ReactStrapModalHeader,
-  title: null,
 };
 
 export default Modal;

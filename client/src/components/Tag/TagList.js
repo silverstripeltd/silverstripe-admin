@@ -52,7 +52,14 @@ const moveFocus = (direction) => {
  * @returns {*}
  * @constructor
  */
-const TagList = ({ tags, deletable, focusable, onTagDelete, onTagClick, onHolderFocus }) => {
+const TagList = ({
+  tags,
+  deletable = false,
+  focusable = true,
+  onTagDelete = () => {},
+  onTagClick = () => {},
+  onHolderFocus = () => {}
+}) => {
   const onDeleteKey = (key) => {
     // eslint-disable-next-line  no-unused-expressions
     moveFocus(FORWARD) || onHolderFocus();
@@ -94,14 +101,6 @@ TagList.propTypes = {
   deletable: PropTypes.bool,
   tags: PropTypes.arrayOf(TagPropType),
   focusable: PropTypes.bool,
-};
-
-TagList.defaultProps = {
-  deletable: false,
-  focusable: true,
-  onTagDelete: () => {},
-  onTagClick: () => {},
-  onHolderFocus: () => {}
 };
 
 export { TagList as Component };

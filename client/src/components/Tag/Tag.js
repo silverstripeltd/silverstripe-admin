@@ -51,13 +51,26 @@ const makeLabel = (key, label, value) => (
  * Component to display a tag the user can interact with.
  */
 const Tag = ({
-  onClick, onDelete, onDeleteKey, onBackSpace, onPrevious, onNext,
-  deletable, dataKey, label, value, children, focusable, ...props
+  onClick = () => {},
+  onDelete = () => {},
+  onDeleteKey = () => {},
+  onBackSpace = () => {},
+  onPrevious = () => {},
+  onNext = () => {},
+  deletable = false,
+  dataKey,
+  label,
+  value,
+  children,
+  focusable = true,
+  tag = 'span',
+  ...props
 }) => {
   const title = makeLabel(dataKey, label, value);
   return (
     <Button
       {...props}
+      tag={tag}
       role="button"
       className={classnames('tag-component', 'btn-sm', { 'tag-component--deletable': deletable })}
       onClick={(e) => { e.preventDefault(); onClick(dataKey); }}
@@ -110,18 +123,6 @@ Tag.propTypes = {
   label: PropTypes.string,
   value: PropTypes.string,
   focusable: PropTypes.bool,
-};
-
-Tag.defaultProps = {
-  tag: 'span',
-  deletable: false,
-  onClick: () => {},
-  onDelete: () => {},
-  onDeleteKey: () => {},
-  onBackSpace: () => {},
-  onPrevious: () => {},
-  onNext: () => {},
-  focusable: true,
 };
 
 export default Tag;

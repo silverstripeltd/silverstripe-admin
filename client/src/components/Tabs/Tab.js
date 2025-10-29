@@ -13,7 +13,13 @@ import PropTypes from 'prop-types';
  * @returns {JSX.Element|null}
  * @constructor
  */
-function Tab({ title, disabled, active, tabClassName, onToggle }) {
+function Tab({
+  title,
+  disabled = false,
+  active = false,
+  tabClassName,
+  onToggle
+}) {
   if (!title) {
     return null;
   }
@@ -33,11 +39,6 @@ Tab.propTypes = {
   active: PropTypes.bool,
   tabClassName: PropTypes.string,
   onToggle: PropTypes.func.isRequired,
-};
-
-Tab.defaultProps = {
-  disabled: false,
-  active: false
 };
 
 export default Tab;

@@ -26,7 +26,11 @@ const ToastAction = ({ label, href, onClick, dismissed, onDismiss }) => {
 /**
  * Display a list of toast actions. Up to 2 actions can be displayed.
  */
-const ToastActions = ({ actions, dismissed, onDismiss }) => (
+const ToastActions = ({
+  actions = [],
+  dismissed,
+  onDismiss
+}) => (
   actions.length === 0 ? null :
   <div className="toast__actions">
     {actions.slice(0, 2).map(
@@ -48,10 +52,6 @@ ToastActions.propTypes = {
     })
   ),
   onDismiss: PropTypes.func.isRequired
-};
-
-ToastActions.defaultProps = {
-  actions: []
 };
 
 export { ToastAction, ToastActions };
