@@ -70,6 +70,7 @@ abstract class CMSBatchAction
 
         return HTTPResponse::create()
             ->setStatusCode(200, sprintf($successMessage ?? '', $count, $errors))
+            ->addHeader('Content-Type', 'application/json')
             ->setBody(json_encode($status));
     }
 
