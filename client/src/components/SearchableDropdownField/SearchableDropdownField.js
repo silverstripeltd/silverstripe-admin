@@ -13,19 +13,19 @@ import url from 'url';
 import FormConstants from '../Form/FormConstants';
 
 const SearchableDropdownField = ({
-  clearable,
-  disabled,
-  lazyLoad,
-  multi,
-  passRef,
-  placeholder,
+  clearable = true,
+  disabled = false,
+  lazyLoad = false,
+  multi = false,
+  passRef = true,
+  placeholder = '',
   options,
   optionUrl,
-  onChange,
-  searchable,
-  value,
-  SelectComponent,
-  AsyncSelectComponent,
+  onChange = () => {},
+  searchable = true,
+  value = '',
+  SelectComponent = Select,
+  AsyncSelectComponent = AsyncSelect,
   ...passThroughProps
 }) => {
   const [hasChanges, setHasChanges] = useState(false);
@@ -171,20 +171,6 @@ SearchableDropdownField.propTypes = {
   value: PropTypes.any,
   SelectComponent: PropTypes.oneOfType([PropTypes.object, PropTypes.func]).isRequired,
   AsyncSelectComponent: PropTypes.oneOfType([PropTypes.object, PropTypes.func]).isRequired,
-};
-
-SearchableDropdownField.defaultProps = {
-  disabled: false,
-  lazyLoad: false,
-  clearable: true,
-  searchable: true,
-  multi: false,
-  passRef: true,
-  placeholder: '',
-  onChange: () => {},
-  value: '',
-  SelectComponent: Select,
-  AsyncSelectComponent: AsyncSelect,
 };
 
 export { SearchableDropdownField as Component };

@@ -43,17 +43,24 @@ const tipImportanceMap = {
  * The LABEL type will show next to a form field title label
  * The INPUT_GROUP type is designed to be used as an 'input group suffix'.
  */
-function Tip(props) {
-  const { content, fieldTitle, icon, id, importance } = props;
+function Tip({
+  content,
+  fieldTitle,
+  icon = 'lamp',
+  id,
+  importance = TIP_IMPORTANCE_LEVELS.NORMAL,
+  type = TIP_TYPES.INPUT_GROUP,
+  extraClass
+}) {
   const { iconColor, description } = tipImportanceMap[importance];
   const label = i18n.inject(i18n._t('Admin.TIP_LABEL', '{description} for {fieldTitle}'), {
     description,
     fieldTitle
   });
-  const classes = ['tip', props.extraClass];
-  if (props.type === TIP_TYPES.TITLE) {
+  const classes = ['tip', extraClass];
+  if (type === TIP_TYPES.TITLE) {
     classes.push('tip--title');
-  } else if (props.type === TIP_TYPES.INPUT_GROUP) {
+  } else if (type === TIP_TYPES.INPUT_GROUP) {
     classes.push('tip--input-group', 'btn--last', 'btn-outline-secondary', `text-${iconColor}`);
   }
   const buttonId = `${id}-tip`;
@@ -90,12 +97,6 @@ Tip.propTypes = {
   extraClass: PropTypes.string,
   fieldTitle: PropTypes.string.isRequired,
   id: PropTypes.string.isRequired,
-};
-
-Tip.defaultProps = {
-  importance: TIP_IMPORTANCE_LEVELS.NORMAL,
-  icon: 'lamp',
-  type: TIP_TYPES.INPUT_GROUP
 };
 
 export default Tip;

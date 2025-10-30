@@ -12,12 +12,12 @@ const noop = () => null;
  */
 const FormBuilderModal = ({
   children,
-  FormBuilderLoaderComponent,
-  onLoadingError,
+  FormBuilderLoaderComponent = FormBuilderLoader,
+  onLoadingError = noop,
   onSubmit,
-  responseClassBad,
-  responseClassGood,
-  showErrorMessage,
+  responseClassBad = 'alert alert-danger',
+  responseClassGood = 'alert alert-success',
+  showErrorMessage = false,
 
   // Form builder props
   autoFocus,
@@ -29,7 +29,7 @@ const FormBuilderModal = ({
   // Props pass to modal
   className,
   isOpen,
-  modalClassName,
+  modalClassName = 'form-builder-modal',
   ModalComponent,
   ModalHeaderComponent,
   onClosed,
@@ -160,15 +160,6 @@ FormBuilderModal.propTypes = {
   onLoadingError: PropTypes.func,
   FormBuilderLoaderComponent: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
   ...Modal.propTypes,
-};
-
-FormBuilderModal.defaultProps = {
-  showErrorMessage: false,
-  onLoadingError: noop,
-  modalClassName: 'form-builder-modal',
-  responseClassGood: 'alert alert-success',
-  responseClassBad: 'alert alert-danger',
-  FormBuilderLoaderComponent: FormBuilderLoader,
 };
 
 export default FormBuilderModal;

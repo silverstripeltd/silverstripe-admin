@@ -22,7 +22,14 @@ import getDefaultActiveKey from './getDefaultActiveKey';
  * @constructor
  */
 function Tabs({
-  hideNav, children, activeTab, className, extraClass, id, activateTab, defaultActiveKey
+  hideNav = false,
+  children,
+  activeTab,
+  className = '',
+  extraClass = '',
+  id,
+  activateTab,
+  defaultActiveKey
 }) {
   const containerProps = { className: classnames([className, extraClass]), id };
   const currentTab = activeTab || getDefaultActiveKey(defaultActiveKey, children);
@@ -57,12 +64,6 @@ Tabs.propTypes = {
   hideNav: PropTypes.bool,
   activateTab: PropTypes.func,
   activeTab: PropTypes.string,
-};
-
-Tabs.defaultProps = {
-  className: '',
-  extraClass: '',
-  hideNav: false
 };
 
 export { Tabs as Component };

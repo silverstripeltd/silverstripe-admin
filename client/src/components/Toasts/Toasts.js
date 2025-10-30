@@ -11,7 +11,12 @@ const debounceTime = 100;
 /**
  * Display a list of toasts notifications in the top right corner.
  */
-const Toasts = ({ toasts, onDismiss, onPause, onResume }) => {
+const Toasts = ({
+  toasts,
+  onDismiss,
+  onPause,
+  onResume
+}) => {
   // This timeout is used to debounce the pause/resume calls
   const [timeoutRef, setTimeoutRef] = useState(undefined);
 
@@ -49,7 +54,5 @@ Toasts.propTypes = {
   onPause: PropTypes.func.isRequired,
   onResume: PropTypes.func.isRequired,
 };
-
-Toasts.defaultProps = { };
 
 export default Toasts;

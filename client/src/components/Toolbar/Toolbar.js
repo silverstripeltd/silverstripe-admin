@@ -5,7 +5,11 @@ import BackButton from 'components/Button/BackButton';
 /**
  * Display a toolbar with some children, usually a breadcrumb or some actions.
  */
-const Toolbar = ({ showBackButton, children, onBackButtonClick }) => {
+const Toolbar = ({
+  showBackButton = false,
+  children,
+  onBackButtonClick
+}) => {
   const onClick = (e) => {
     e.preventDefault();
     if (typeof onBackButtonClick === 'function') {
@@ -26,10 +30,6 @@ const Toolbar = ({ showBackButton, children, onBackButtonClick }) => {
 Toolbar.propTypes = {
   onBackButtonClick: PropTypes.func,
   showBackButton: PropTypes.bool
-};
-
-Toolbar.defaultProps = {
-  showBackButton: false,
 };
 
 export default Toolbar;
