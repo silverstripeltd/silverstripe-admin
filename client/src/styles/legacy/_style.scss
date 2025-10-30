@@ -1029,6 +1029,10 @@ html, body {
   color: $white;
 }
 
+.ui-widget-content a.btn-secondary.disabled {
+  color: inherit;
+}
+
 /**
  * Content Tools is the sidebar on the left of the main content
  * panel
