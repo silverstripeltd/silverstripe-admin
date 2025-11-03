@@ -23,6 +23,9 @@ nl:
     LINKDESCR: 'Link omschrijving'
     LINKOPENNEWWIN: 'Open in nieuw venster/tab'
     LINKTEXT: 'Link tekst'
+  SilverStripe\Admin\Forms\EditorPhoneLinkFormFactory:
+    LINKDESCR: 'Link omschrijving'
+    LINKTEXT: 'Link tekst'
   SilverStripe\Admin\Forms\LinkFormFactory:
     INSERT_LINK: 'Voeg link toe'
   SilverStripe\Admin\Forms\UsedOnTable:
