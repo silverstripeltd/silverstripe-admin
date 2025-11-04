@@ -124,13 +124,13 @@ Feature: Accessibility
     When I press the "Space" key globally
     Then I should see "Page 2a"
 
-    # PageUp/PageDown moves to first/last sibling
+    # Home/End moves to first/last sibling
     When I press the "Tab" key globally
     When I press the "Tab" key globally
     And the "a[title='(Record type: Page) Page 2a']" element should have focus
-    When I press the "Page_Down" key globally
+    When I press the "End" key globally
     Then the "a[title='(Record type: Page) Page 2c']" element should have focus
-    When I press the "Page_Up" key globally
+    When I press the "Home" key globally
     Then the "a[title='(Record type: Page) Page 2a']" element should have focus
 
     # Can open nested children
@@ -138,6 +138,14 @@ Feature: Accessibility
     And the "a[title='(Record type: Page) Page 2b']" element should have focus
     When I press the "Right" key globally
     Then I should see "Page 2bi"
+
+    # Right arrow on an open node focuses on the first child
+    When I press the "Right" key globally
+    Then the "a[title='(Record type: Page) Page 2bi']" element should have focus
+
+    # Left arrow on a child node focuses the parent node
+    When I press the "Left" key globally
+    Then the "a[title='(Record type: Page) Page 2b']" element should have focus
 
     # Up + Down moves through all visible nodes
     When I press the "Up" key globally
