@@ -1,65 +1,25 @@
-import React, { PureComponent } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
 import i18n from 'i18n';
 import Loading from 'components/Loading/Loading';
 import provideUsedOnData from './provideUsedOnData';
 
-class UsedOnTable extends PureComponent {
-  renderHeader() {
-    return (
-      <thead>
-        <tr>
-          <th scope="col" className="used-on__col--index">{i18n._t('Admin.USED_ON_NUM', '#')}</th>
-          <th scope="col" className="used-on__col--title">{i18n._t('Admin.USED_ON', 'Used on')}</th>
-        </tr>
-      </thead>
-    );
-  }
+const UsedOnTable = ({
+  usedOn,
+  loading,
+  error,
+}) => {
+  const renderHeader = () => (
+    <thead>
+      <tr>
+        <th scope="col" className="used-on__col--index">{i18n._t('Admin.USED_ON_NUM', '#')}</th>
+        <th scope="col" className="used-on__col--title">{i18n._t('Admin.USED_ON', 'Used on')}</th>
+      </tr>
+    </thead>
+  );
 
-  renderBody() {
-    const { usedOn, loading, error } = this.props;
-
-    if (error || !usedOn || !usedOn.length) {
-      let message = null;
-      let classState = null;
-
-      if (error) {
-        message = i18n.inject(
-          i18n._t('Admin.LOADING_ERROR', 'As error occured when loading the data: {message}'),
-          { message: error },
-        );
-        classState = 'error';
-      } else if (loading) {
-        message = <Loading />;
-        classState = 'loading';
-      } else {
-        message = i18n._t('Admin.NOT_USED', 'This file is currently not in use.');
-        classState = 'empty';
-      }
-
-      const className = classnames([
-        'used-on__message',
-        `used-on__message--${classState}`,
-      ]);
-
-      return (
-        <tbody aria-live="polite">
-          <tr>
-            <td className={className} colSpan="3">{message}</td>
-          </tr>
-        </tbody>
-      );
-    }
-
-    return (
-      <tbody aria-live="polite">
-        {usedOn.map(this.renderRow)}
-      </tbody>
-    );
-  }
-
-  renderRow(data, index) {
+  const renderRow = (data, index) => {
     const { id, type } = data;
     const rowData = data.ancestors
       ? [data].concat(data.ancestors).reverse()
@@ -97,17 +57,55 @@ class UsedOnTable extends PureComponent {
         </td>
       </tr>
     );
-  }
+  };
 
-  render() {
+  const renderBody = () => {
+    if (error || !usedOn || !usedOn.length) {
+      let message = null;
+      let classState = null;
+
+      if (error) {
+        message = i18n.inject(
+          i18n._t('Admin.LOADING_ERROR', 'As error occured when loading the data: {message}'),
+          { message: error },
+        );
+        classState = 'error';
+      } else if (loading) {
+        message = <Loading />;
+        classState = 'loading';
+      } else {
+        message = i18n._t('Admin.NOT_USED', 'This file is currently not in use.');
+        classState = 'empty';
+      }
+
+      const className = classnames([
+        'used-on__message',
+        `used-on__message--${classState}`,
+      ]);
+
+      return (
+        <tbody aria-live="polite">
+          <tr>
+            <td className={className} colSpan="3">{message}</td>
+          </tr>
+        </tbody>
+      );
+    }
+
     return (
-      <table className="table used-on__table">
-        {this.renderHeader()}
-        {this.renderBody()}
-      </table>
+      <tbody aria-live="polite">
+        {usedOn.map(renderRow)}
+      </tbody>
     );
-  }
-}
+  };
+
+  return (
+    <table className="table used-on__table">
+      {renderHeader()}
+      {renderBody()}
+    </table>
+  );
+};
 
 UsedOnTable.propTypes = {
   loading: PropTypes.bool,

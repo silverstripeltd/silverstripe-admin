@@ -1,51 +1,49 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { loadUsedOn } from 'state/usedOn/usedOnActions';
 import { injectTabContext } from 'hooks/useTabContext';
 
 const provideUsedOnData = (UsedOnTable) => {
-  class UsedOnDataProvider extends Component {
-    componentDidMount() {
-      const firstMount = this.haveFetchedData === undefined;
-      const tabContext = this.props.tabContext ? this.props.tabContext : false;
-      const activeTab = tabContext ? tabContext.isOnActiveTab : false;
-      this.haveFetchedData = false;
-      if ((firstMount && activeTab) || this.props.forceFetch) {
-        this.fetchDataFromEndpoint();
+  const UsedOnDataProvider = ({
+    identifier,
+    loading,
+    data,
+    error,
+    usedOn,
+    forceFetch,
+    tabContext,
+    loadUsedOn: loadUsedOnAction,
+  }) => {
+    const [haveFetchedData, setHaveFetchedData] = useState(false);
+
+    const fetchDataFromEndpoint = () => {
+      const { method, url } = (data.readUsageEndpoint || {});
+      if (!haveFetchedData || forceFetch) {
+        // see client/src/state/usedOn/usedOnActions.js
+        loadUsedOnAction(identifier, method, url);
       }
-    }
+      setHaveFetchedData(true);
+    };
 
-    componentDidUpdate(oldProps) {
-      const tabContext = this.props.tabContext;
-
-      // Fetch data if
+    useEffect(() => {
+      // Fetch data if on of the following is true:
       // - identifier has changed
       // - component is not in a tab
       // - component is on the currently active tab
-      const doFetch =
-        oldProps.identifier !== this.props.identifier ||
-        !tabContext ||
-        tabContext.isOnActiveTab;
-
-      if (doFetch) {
-        this.fetchDataFromEndpoint();
+      // - forceFetch is true
+      if (tabContext && !tabContext.isOnActiveTab && !forceFetch) {
+        return;
       }
-    }
+      fetchDataFromEndpoint();
+    }, [identifier, tabContext, forceFetch]);
 
-    fetchDataFromEndpoint(props = this.props) {
-      const { method, url } = (props.data.readUsageEndpoint || {});
-      if (!this.haveFetchedData || this.props.forceFetch) {
-        // see client/src/state/usedOn/usedOnActions.js
-        props.loadUsedOn(props.identifier, method, url);
-      }
-      this.haveFetchedData = true;
-    }
-
-    render() {
-      return <UsedOnTable {...this.props} />;
-    }
-  }
+    return <UsedOnTable
+      loading={loading}
+      usedOn={usedOn}
+      error={error}
+    />;
+  };
 
   UsedOnDataProvider.propTypes = {
     identifier: PropTypes.string,
