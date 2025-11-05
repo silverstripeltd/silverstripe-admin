@@ -201,9 +201,33 @@ $.entwine('ss.tree', function($){
                 $(this).jstree('toggle_node', $li);
               }
             } else if (key === 'ArrowLeft') {
-              $(this).jstree('close_node', $li);
+              // If node is open, close it
+              if ($li.hasClass('jstree-open')) {
+                $(this).jstree('close_node', $li);
+              } else {
+                // If node is closed, focus on parent
+                var $parent = $li.parents('li').first();
+                if ($parent.length) {
+                  var parentAnchor = getDirectAnchor($parent);
+                  if (parentAnchor) {
+                    parentAnchor.focus();
+                  }
+                }
+              }
             } else if (key === 'ArrowRight') {
-              $(this).jstree('open_node', $li);
+              if ($li.hasClass('jstree-open')) {
+                // If node is already open, focus on the first child
+                var $child = $li.find('> ul > li').first();
+                if ($child.length) {
+                  var childAnchor = getDirectAnchor($child);
+                  if (childAnchor) {
+                    childAnchor.focus();
+                  }
+                }
+              } else {
+                // If node is closed, open it
+                $(this).jstree('open_node', $li);
+              }
             } else if (key === 'ArrowUp') {
               var prev = getPrevVisible($li);
               if (prev) {
@@ -214,7 +238,7 @@ $.entwine('ss.tree', function($){
               if (next) {
                 next.focus();
               }
-            } else if (key === 'PageUp') {
+            } else if (key === 'Home') {
               // Focus on first sibling
               var $siblings = $li.parent().children('li');
               if ($siblings.length) {
@@ -224,7 +248,7 @@ $.entwine('ss.tree', function($){
                   fa.focus();
                 }
               }
-            } else if (key === 'PageDown') {
+            } else if (key === 'End') {
               // Focus on last sibling
               var $siblings = $li.parent().children('li');
               if ($siblings.length) {
