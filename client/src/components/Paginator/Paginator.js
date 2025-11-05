@@ -2,7 +2,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import i18n from 'i18n';
 
-function Paginator(props) {
+function Paginator({
+  title = '',
+  ...props
+}) {
   // Note that props.page is 1-based i.e. the first page is 1, not 0
   const totalPages = Math.ceil(props.totalItems / props.maxItemsPerPage);
 
@@ -51,10 +54,20 @@ function Paginator(props) {
    * Renders the page selection dropdown.
    */
   function renderSelect() {
+    const current = props.currentPage;
+    const total = totalPages;
+    const ariaLabel = i18n.inject(
+      i18n._t(
+        'Admin.CURRENT_PAGE_CURRENTLY',
+        'Current page, currently {current} of {total}'
+      ),
+      { current, total }
+    );
     return <>
       <select
-        value={props.currentPage}
+        value={current}
         onChange={(evt) => handleSelect(evt)}
+        aria-label={ariaLabel}
       >
         {createOptions()}
       </select> / {totalPages}
@@ -89,14 +102,26 @@ function Paginator(props) {
     </button>;
   }
 
+  /**
+   * Generates the aria-label for the paginator navigation element.
+   */
+  function getAriaLabel() {
+    return title
+      ? i18n.inject(
+        i18n._t('Admin.PAGINATION_FOR_TITLE', 'Pagination for {title}'),
+        { title }
+      )
+      : i18n._t('Admin.PAGINATION', 'Pagination');
+  }
+
   // Render the paginator
-  return <div className="paginator-footer">
+  return <nav aria-label={getAriaLabel()} className="paginator-footer">
     <div>
       <div className="paginator-prev">{renderPrevButton()}</div>
       <div className="paginator-page">{renderSelect()}</div>
       <div className="paginator-next">{renderNextButton()}</div>
     </div>
-  </div>;
+  </nav>;
 }
 
 Paginator.propTypes = {
@@ -104,6 +129,7 @@ Paginator.propTypes = {
   maxItemsPerPage: PropTypes.number.isRequired,
   currentPage: PropTypes.number.isRequired,
   onChangePage: PropTypes.func.isRequired,
+  title: PropTypes.string,
 };
 
 export { Paginator as Component };
