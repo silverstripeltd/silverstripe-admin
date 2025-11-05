@@ -18,6 +18,9 @@ eo:
     LINKDESCR: 'Liga priskribo'
     LINKOPENNEWWIN: 'Malfermi en nova fenestro/langeto'
     LINKTEXT: 'Liga teksto'
+  SilverStripe\Admin\Forms\EditorPhoneLinkFormFactory:
+    LINKDESCR: 'Liga priskribo'
+    LINKTEXT: 'Liga teksto'
   SilverStripe\Admin\Forms\LinkFormFactory:
     INSERT_LINK: 'Enmeti ligilon'
   SilverStripe\Admin\Forms\UsedOnTable:

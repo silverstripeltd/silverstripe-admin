@@ -12,6 +12,9 @@ ru:
     LINKDESCR: 'Описание ссылки'
     LINKOPENNEWWIN: 'Открыть в новом окне/вкладке'
     LINKTEXT: 'Текст ссылки'
+  SilverStripe\Admin\Forms\EditorPhoneLinkFormFactory:
+    LINKDESCR: 'Описание ссылки'
+    LINKTEXT: 'Текст ссылки'
   SilverStripe\Admin\Forms\LinkFormFactory:
     INSERT_LINK: 'Вставить ссылку'
   SilverStripe\Admin\Forms\UsedOnTable:

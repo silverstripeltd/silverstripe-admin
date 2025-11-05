@@ -25,6 +25,9 @@ sk:
     LINKDESCR: 'Popis odkazu'
     LINKOPENNEWWIN: 'Otvoriť v novom okne/na karte'
     LINKTEXT: 'Text odkazu'
+  SilverStripe\Admin\Forms\EditorPhoneLinkFormFactory:
+    LINKDESCR: 'Popis odkazu'
+    LINKTEXT: 'Text odkazu'
   SilverStripe\Admin\Forms\LinkFormFactory:
     INSERT_LINK: 'Vložiť odkaz'
   SilverStripe\Admin\Forms\UsedOnTable:

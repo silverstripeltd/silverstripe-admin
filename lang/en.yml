@@ -24,6 +24,10 @@ en:
     LINKOPENNEWWIN: 'Open in new window/tab'
     LINKTEXT: 'Link text'
     URL: URL
+  SilverStripe\Admin\Forms\EditorPhoneLinkFormFactory:
+    LINKDESCR: 'Link description'
+    LINKTEXT: 'Link text'
+    PHONE: Phone
   SilverStripe\Admin\Forms\LinkFormFactory:
     INSERT_LINK: 'Insert link'
   SilverStripe\Admin\Forms\UsedOnTable:
@@ -71,8 +75,11 @@ en:
     SAVE: Save
     SAVEDUP: Saved.
     SUBMIT_BUTTON_LABEL: Go
+    SkipLink: 'Skip main navigation'
     ValidationError: 'Validation error'
     Version: Version
+  SilverStripe\Admin\LeftAndMain_Menu:
+    MainMenu: 'Main menu'
   SilverStripe\Admin\LeftAndMain_ViewModeSelector:
     Auto: Auto
     ChangeViewMode: 'Change view mode'
