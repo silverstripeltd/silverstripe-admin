@@ -12,6 +12,9 @@ fr:
     LINKDESCR: 'Description du lien'
     LINKOPENNEWWIN: 'Ouvrir dans une nouvelle fenêtre/onglet'
     LINKTEXT: 'Texte du lien'
+  SilverStripe\Admin\Forms\EditorPhoneLinkFormFactory:
+    LINKDESCR: 'Description du lien'
+    LINKTEXT: 'Texte du lien'
   SilverStripe\Admin\Forms\LinkFormFactory:
     INSERT_LINK: 'Ajouter un lien'
   SilverStripe\Admin\Forms\UsedOnTable:
