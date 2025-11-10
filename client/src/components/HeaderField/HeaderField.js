@@ -6,7 +6,12 @@ import classnames from 'classnames';
  * Renders a dataless field that inserts an header inside a form
  * @returns {JSX.Element}
  */
-function HeaderField({ className, extraClass, id, data: { headingLevel, title } }) {
+function HeaderField({
+  className = '',
+  extraClass = '',
+  id,
+  data: { headingLevel, title }
+}) {
   const Heading = `h${headingLevel || 3}`;
   return (
     <div className="field">
@@ -26,11 +31,6 @@ HeaderField.propTypes = {
       title: PropTypes.string,
     }),
   ]).isRequired,
-};
-
-HeaderField.defaultProps = {
-  className: '',
-  extraClass: '',
 };
 
 export default HeaderField;

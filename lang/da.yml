@@ -12,6 +12,9 @@ da:
     LINKDESCR: 'Link beskrivelse'
     LINKOPENNEWWIN: 'Åben i nyt vindue/fane'
     LINKTEXT: 'Link tekst'
+  SilverStripe\Admin\Forms\EditorPhoneLinkFormFactory:
+    LINKDESCR: 'Link beskrivelse'
+    LINKTEXT: 'Link tekst'
   SilverStripe\Admin\Forms\LinkFormFactory:
     INSERT_LINK: 'Indsæt link'
   SilverStripe\Admin\Forms\UsedOnTable:

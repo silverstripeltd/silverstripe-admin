@@ -13,7 +13,17 @@ import PropTypes from 'prop-types';
  * @returns {JSX.Element|null}
  * @constructor
  */
-function Tab({ title, disabled, active, tabClassName, onToggle, tabIndex, index, onKeyDown, setTabRef }) {
+function Tab({
+  title,
+  disabled = false,
+  active = false,
+  tabClassName,
+  onToggle,
+  tabIndex = 0,
+  index = 0,
+  onKeyDown = () => {},
+  setTabRef = () => {},
+}) {
   if (!title) {
     return null;
   }
@@ -46,15 +56,6 @@ Tab.propTypes = {
   index: PropTypes.number,
   onKeyDown: PropTypes.func,
   setTabRef: PropTypes.func,
-};
-
-Tab.defaultProps = {
-  disabled: false,
-  active: false,
-  tabIndex: 0,
-  index: 0,
-  onKeyDown: () => {},
-  setTabRef: () => {},
 };
 
 export default Tab;

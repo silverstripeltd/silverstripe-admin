@@ -1,9 +1,15 @@
 import React from 'react';
 import { Button as BaseButton } from 'reactstrap';
-import PropTypes from 'prop-types';
 import classnames from 'classnames';
+import PropTypes from 'prop-types';
 
-const Button = ({ icon, className, noText, children, ...props }) =>
+const Button = ({
+  icon,
+  className,
+  noText = false,
+  children,
+  ...props
+}) =>
   (<BaseButton
     className={classnames(className, { 'btn--no-text': noText })}
     aria-label={noText ? children : undefined}

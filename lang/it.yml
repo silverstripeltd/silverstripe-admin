@@ -18,6 +18,9 @@ it:
     LINKDESCR: 'Descrizione del collegamento'
     LINKOPENNEWWIN: 'Apri in una nuova finestra/scheda'
     LINKTEXT: 'Link al testo'
+  SilverStripe\Admin\Forms\EditorPhoneLinkFormFactory:
+    LINKDESCR: 'Descrizione del collegamento'
+    LINKTEXT: 'Link al testo'
   SilverStripe\Admin\Forms\LinkFormFactory:
     INSERT_LINK: 'Inserisci il link'
   SilverStripe\Admin\Forms\UsedOnTable:
