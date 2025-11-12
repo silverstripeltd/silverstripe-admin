@@ -1,0 +1,58 @@
+// This `__container` class is only used for entwine, not for the react component
+// Entwine will create an element that houses the react component, however the react component will b
+// housed inside this element, rather than replacing it
+// When displayed on the edit form, it's necessary to set `display: flex` on is the direct child of
+// `.btn-toolbar` in order for the indicator to have the correct vertical size.
+// Therefore we have to set this CSS only for entwine, and not for the react component
+.unsaved-changes-indicator__container {
+  display: flex;
+}
+
+.unsaved-changes-indicator {
+  display: inline-flex;
+  gap: 8px;
+  padding: 7px 8px 0;
+  border-radius: 3px;
+  border: 1px solid;
+  font-size: 13px;
+  white-space: nowrap;
+  margin-left: 4px;
+  margin-right: 8px;
+}
+
+.unsaved-changes-indicator__icon {
+  display: inline-block;
+  font-size: 14px;
+}
+
+.unsaved-changes-indicator--notice {
+  color: var(--bs-info-text-emphasis);
+  border-color: var(--bs-info-border-subtle);
+  background-color: var(--bs-info-bg-subtle);
+}
+
+.unsaved-changes-indicator--warning {
+  color: var(--bs-warning-text-emphasis);
+  border-color: var(--bs-warning-border-subtle);
+  background-color: var(--bs-warning-bg-subtle);
+}
+
+.unsaved-changes-indicator__short {
+  display: none;
+
+  @include media-breakpoint-up(sm) {
+    display: inline;
+  }
+
+  @include media-breakpoint-up(xl) {
+    display: none;
+  }
+}
+
+.unsaved-changes-indicator__full {
+  display: none;
+
+  @include media-breakpoint-up(xl) {
+    display: inline;
+  }
+}

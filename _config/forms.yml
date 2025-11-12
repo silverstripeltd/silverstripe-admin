@@ -4,6 +4,7 @@ Name: adminforms
 SilverStripe\Forms\GridField\GridFieldDetailForm_ItemRequest:
   extensions:
     - SilverStripe\Admin\Forms\GridFieldDetailFormPreviewExtension
+    - SilverStripe\Admin\Forms\GridFieldDetailFormUnsavedChangesIndicatorExtension
 
 SilverStripe\Forms\GridField\GridFieldPrintButton:
   extensions:

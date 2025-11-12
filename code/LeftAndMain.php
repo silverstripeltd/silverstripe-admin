@@ -37,6 +37,7 @@ use SilverStripe\ORM\Hierarchy\Hierarchy;
 use SilverStripe\Model\List\SS_List;
 use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\Core\Validation\ValidationResult;
+use SilverStripe\Admin\Forms\UnsavedChangesIndicator;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Security\Security;
@@ -996,6 +997,7 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
                 }
             }
         }
+        $actions->push(UnsavedChangesIndicator::create('UnsavedChangesIndicator'));
 
         $negotiator = $this->getResponseNegotiator();
         $form = Form::create(

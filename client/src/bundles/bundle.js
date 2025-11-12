@@ -117,6 +117,7 @@ import '../legacy/ToggleCompositeField';
 import '../legacy/SudoModePasswordField/SudoModePasswordFieldEntwine';
 import '../legacy/TreeDropdownField/TreeDropdownFieldEntwine';
 import '../legacy/UsedOnTable/UsedOnTableEntwine';
+import '../legacy/UnsavedChangesIndicator/UnsavedChangesIndicatorEntwine';
 import '../legacy/DatetimeField';
 import '../legacy/HtmlEditorField';
 import '../legacy/TabSet';
