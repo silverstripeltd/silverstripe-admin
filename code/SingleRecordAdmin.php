@@ -28,6 +28,7 @@ abstract class SingleRecordAdmin extends LeftAndMain
         $form = parent::getEditForm($id, $fields);
         // Keep the tabs on the top row, rather than underneath
         if ($form?->Fields()->hasTabSet()) {
+            $form->addExtraClass('cms-tabset'); // Required for tabsets to work, see CMSTabSet.ss for info
             $form->Fields()->findOrMakeTab('Root')->setTemplate('SilverStripe/Forms/CMSTabSet');
         }
         return $form;
