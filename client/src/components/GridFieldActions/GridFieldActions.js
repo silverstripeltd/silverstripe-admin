@@ -1,13 +1,16 @@
-import React, { PureComponent } from 'react';
+import React, { memo } from 'react';
 import { Button, DropdownItem } from 'reactstrap';
 import classnames from 'classnames';
 import PropTypes from 'prop-types';
 import GridFieldDropdownAction from './GridFieldDropdownAction';
 import ActionMenu from '../ActionMenu/ActionMenu';
+import GridFieldDropdownActionType from './GridFieldDropdownActionType';
 
-class GridFieldActions extends PureComponent {
-  renderMultipleActions(schema) {
-    const groupedActions = schema.reduce((groups, action) => {
+const GridFieldActions = ({
+  schema
+}) => {
+  const renderMultipleActions = (schemaInput) => {
+    const groupedActions = schemaInput.reduce((groups, action) => {
       const groupsList = groups;
       const groupName = action.group;
 
@@ -51,9 +54,9 @@ class GridFieldActions extends PureComponent {
         )}
       </ActionMenu>
     );
-  }
+  };
 
-  renderSingleAction(action) {
+  const renderSingleAction = (action) => {
     const { type, title, data } = action;
     let { url } = action;
     let buttonType;
@@ -61,10 +64,10 @@ class GridFieldActions extends PureComponent {
       buttonType = 'submit';
       url = undefined; // If url is defined reactstrap forces it to render as a link
     }
-    const classNames = classnames('action', data.classNames);
+    const className = classnames('action', data.classNames);
     return (
       <Button
-        className={classNames}
+        className={className}
         type={buttonType}
         href={url}
         data-url={data['data-url']}
@@ -76,24 +79,22 @@ class GridFieldActions extends PureComponent {
         {title}
       </Button>
     );
-  }
+  };
 
-  render() {
-    const { schema } = this.props;
-    if (schema.length > 1) {
-      return this.renderMultipleActions(schema);
-    } else if (schema.length === 1) {
-      return this.renderSingleAction(schema[0]);
-    }
-    return null;
+  if (schema.length > 1) {
+    return renderMultipleActions(schema);
+  } else if (schema.length === 1) {
+    return renderSingleAction(schema[0]);
   }
-}
+  return null;
+};
 
-const actionShape = GridFieldDropdownAction.propTypes;
+const actionShape = GridFieldDropdownActionType;
 actionShape.group = PropTypes.string;
 
 GridFieldActions.propTypes = PropTypes.arrayOf(
   PropTypes.shape(actionShape)
 ).isRequired;
 
-export default GridFieldActions;
+// Wrapping export in React.memo() because the old class component extended React.PureComponent
+export default memo(GridFieldActions);
