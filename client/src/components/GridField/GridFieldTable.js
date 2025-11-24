@@ -1,7 +1,10 @@
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
-class GridFieldTable extends Component {
+const GridFieldTable = ({
+  header,
+  rows,
+}) => {
   /**
    * Generates the header component.
    *
@@ -10,13 +13,13 @@ class GridFieldTable extends Component {
    *
    * @return object|null
    */
-  generateHeader() {
-    if (typeof this.props.header !== 'undefined') {
-      return this.props.header;
+  const generateHeader = () => {
+    if (typeof header !== 'undefined') {
+      return header;
     }
 
     return null;
-  }
+  };
 
   /**
    * Generates the table rows.
@@ -26,25 +29,23 @@ class GridFieldTable extends Component {
    *
    * @return object|null
    */
-  generateRows() {
-    if (typeof this.props.rows !== 'undefined') {
-      return this.props.rows;
+  const generateRows = () => {
+    if (typeof rows !== 'undefined') {
+      return rows;
     }
 
     return null;
-  }
+  };
 
-  render() {
-    return (
-      <div className="grid-field">
-        <table className="table table-hover grid-field__table">
-          <thead>{this.generateHeader()}</thead>
-          <tbody>{this.generateRows()}</tbody>
-        </table>
-      </div>
-    );
-  }
-}
+  return (
+    <div className="grid-field">
+      <table className="table table-hover grid-field__table">
+        <thead>{generateHeader()}</thead>
+        <tbody>{generateRows()}</tbody>
+      </table>
+    </div>
+  );
+};
 
 GridFieldTable.propTypes = {
   header: PropTypes.object,

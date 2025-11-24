@@ -1,27 +1,24 @@
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
-class GridFieldAction extends Component {
-  constructor(props) {
-    super(props);
-    this.handleClick = this.handleClick.bind(this);
-  }
+const GridFieldAction = ({
+  onClick,
+  icon,
+  record,
+}) => {
+  const handleClick = (event) => {
+    onClick(event, record.ID);
+  };
 
-  handleClick(event) {
-    this.props.onClick(event, this.props.record.ID);
-  }
-
-  render() {
-    return (
-      <button
-        className="grid-field__icon-action btn--icon-lg"
-        onClick={this.handleClick}
-      >
-        <span className={`font-icon-${this.props.icon}`} aria-hidden="true" />
-      </button>
-    );
-  }
-}
+  return (
+    <button
+      className="grid-field__icon-action btn--icon-lg"
+      onClick={handleClick}
+    >
+      <span className={`font-icon-${icon}`} aria-hidden="true" />
+    </button>
+  );
+};
 
 GridFieldAction.propTypes = {
   onClick: PropTypes.func.isRequired,
