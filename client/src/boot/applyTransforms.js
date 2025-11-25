@@ -55,6 +55,7 @@ const applyTransforms = () => {
 
           return togglePristineState(field, isPristine);
         });
+        form.mutateField('UnsavedChangesIndicator', (field) => ({ ...field, isDirty: form.isDirty() }));
 
         return form.getState();
       });

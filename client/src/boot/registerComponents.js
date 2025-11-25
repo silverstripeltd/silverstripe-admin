@@ -52,6 +52,8 @@ import ListboxField from 'components/ListboxField/ListboxField';
 import SearchableDropdownField from 'components/SearchableDropdownField/SearchableDropdownField';
 import SudoModePasswordField from 'components/SudoModePasswordField/SudoModePasswordField';
 import Paginator from 'components/Paginator/Paginator';
+import UnsavedChangesIndicator from 'components/UnsavedChangesIndicator/UnsavedChangesIndicator';
+import UnsavedChangesIndicatorTimer from 'components/UnsavedChangesIndicator/UnsavedChangesIndicatorTimer';
 
 export default () => {
   Injector.component.registerMany({
@@ -108,5 +110,7 @@ export default () => {
     SearchableDropdownField,
     SudoModePasswordField,
     Paginator,
+    UnsavedChangesIndicator,
+    UnsavedChangesIndicatorTimer,
   });
 };
