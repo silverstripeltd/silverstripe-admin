@@ -362,7 +362,6 @@ class ModelAdminTest extends FunctionalTest
     {
         $admin = new ModelAdminTest\MultiModelAdmin();
         $reflectionMethod = new ReflectionMethod($admin, 'getModelTabForModelClass');
-        $reflectionMethod->setAccessible(true);
         $this->assertSame(Contact::class, $reflectionMethod->invoke($admin, Contact::class));
         $this->assertSame(Contact::class, $reflectionMethod->invoke($admin, ContactSubclass::class));
         $this->assertSame('Player', $reflectionMethod->invoke($admin, Player::class));
@@ -372,7 +371,6 @@ class ModelAdminTest extends FunctionalTest
     {
         $admin = new ModelAdminTest\MultiModelAdmin();
         $reflectionMethod = new ReflectionMethod($admin, 'getModelTabForModelClass');
-        $reflectionMethod->setAccessible(true);
         $this->expectException(InvalidArgumentException::class);
         $reflectionMethod->invoke($admin, 'cricket-players');
     }
@@ -393,7 +391,6 @@ class ModelAdminTest extends FunctionalTest
             ]);
 
         $reflectionMethod = new ReflectionMethod($mock, 'getModelTabForModelClass');
-        $reflectionMethod->setAccessible(true);
         $this->assertSame(Player::class, $reflectionMethod->invoke($mock, Player::class));
     }
 
