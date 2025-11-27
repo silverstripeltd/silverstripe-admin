@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { bindActionCreators, compose } from 'redux';
 import { connect } from 'react-redux';
@@ -6,63 +6,67 @@ import FormBuilderModal from 'components/FormBuilderModal/FormBuilderModal';
 import fileSchemaModalHandler from 'containers/InsertLinkModal/fileSchemaModalHandler';
 import * as schemaActions from 'state/schema/SchemaActions';
 
-class InsertLinkModal extends Component {
-  constructor(props) {
-    super(props);
+const InsertLinkModal = (props) => {
+  const {
+    isOpen,
+    onInsert,
+    onClosed,
+    setOverrides,
+  } = props;
 
-    this.handleSubmit = this.handleSubmit.bind(this);
-    if (!props.isOpen) {
-      props.setOverrides(null);
-    }
-  }
+  const prevIsOpenRef = useRef(isOpen);
 
-  componentDidUpdate(oldProps) {
-    const props = this.props;
-    if ((props.isOpen && !oldProps.isOpen) || (!props.isOpen && oldProps.isOpen)) {
-      props.setOverrides(props.isOpen ? props : null);
+  useEffect(() => {
+    if (!isOpen) {
+      setOverrides(null);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    // Checking prevIsOpenRef.current to ensure that we do not call setOverrides() on mount
+    const prevIsOpen = prevIsOpenRef.current;
+    if ((isOpen && !prevIsOpen) || (!isOpen && prevIsOpen)) {
+      setOverrides(isOpen ? props : null);
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [isOpen]);
+
+  const handleSubmit = (data, action) => {
+    switch (action) {
+      case 'action_cancel': {
+        onClosed();
+        break;
+      }
+      default: {
+        onInsert(data, action);
+      }
+    }
+    return Promise.resolve();
+  };
 
   /**
    * Generates the properties for the modal
    * @returns {object}
    */
-  getModalProps() {
-    const props = Object.assign(
+  const getModalProps = () => {
+    const modalProps = Object.assign(
       {},
-      this.props,
+      props,
       {
-        onSubmit: this.handleSubmit,
-        onClosed: this.props.onClosed,
+        onSubmit: handleSubmit,
+        onClosed,
         autoFocus: true,
         showErrorMessage: true,
       }
     );
-    delete props.onInsert;
-    delete props.sectionConfig;
+    delete modalProps.onInsert;
+    delete modalProps.sectionConfig;
+    return modalProps;
+  };
 
-    return props;
-  }
-
-  handleSubmit(data, action) {
-    switch (action) {
-      case 'action_cancel': {
-        this.props.onClosed();
-        break;
-      }
-      default: {
-        this.props.onInsert(data, action);
-      }
-    }
-
-    return Promise.resolve();
-  }
-
-  render() {
-    const modalProps = this.getModalProps();
-    return <FormBuilderModal {...modalProps} />;
-  }
-}
+  const modalProps = getModalProps();
+  return <FormBuilderModal {...modalProps} />;
+};
 
 InsertLinkModal.propTypes = {
   isOpen: PropTypes.bool,
@@ -74,8 +78,6 @@ InsertLinkModal.propTypes = {
   requireLinkText: PropTypes.bool,
   currentPageID: PropTypes.number,
 };
-
-InsertLinkModal.defaultProps = {};
 
 function mapDispatchToProps(dispatch) {
   return {
