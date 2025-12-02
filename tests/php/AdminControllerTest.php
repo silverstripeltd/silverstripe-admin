@@ -153,7 +153,6 @@ class AdminControllerTest extends FunctionalTest
         $controller = new TestAdminController();
         $refelectionObject = new ReflectionObject($controller);
         $method = $refelectionObject->getMethod('jsonSuccess');
-        $method->setAccessible(true);
         if ($expectedException) {
             $this->expectException($expectedException);
         }
@@ -218,7 +217,6 @@ class AdminControllerTest extends FunctionalTest
         $controller = new TestAdminController();
         $refelectionObject = new ReflectionObject($controller);
         $method = $refelectionObject->getMethod('jsonError');
-        $method->setAccessible(true);
         $this->expectException(HTTPResponse_Exception::class);
         $expectedMessage = json_encode((object) [
             'status' => 'error',
