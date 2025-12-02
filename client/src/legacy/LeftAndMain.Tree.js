@@ -4,7 +4,43 @@
 
 import $ from 'jquery';
 
-$.entwine('ss.tree', function($){
+const updateRovingTabindex = ($tree, $targetAnchor) => {
+  if (!$targetAnchor || !$targetAnchor.length) {
+    return;
+  }
+  if (!$tree || !$tree.length) {
+    return;
+  }
+  const $links = $tree.find('a');
+  const $toggles = $tree.find('ins');
+  $links.attr('tabindex', -1);
+  $toggles.attr('tabindex', -1);
+  $targetAnchor.attr('tabindex', 0);
+};
+
+const resetTabindexToCurrentPage = ($tree) => {
+  if (!$tree || !$tree.length) {
+    return;
+  }
+  const $currentPage = $tree.find('a[aria-current="page"]').first();
+  const $links = $tree.find('a');
+  const $toggles = $tree.find('ins');
+  $links.attr('tabindex', -1);
+  $toggles.attr('tabindex', -1);
+  if ($currentPage.length) {
+    $currentPage.attr('tabindex', 0);
+  } else {
+    const $firstPage = $tree.find('li[data-id]').not('[data-id="0"]').first().find('> a').first();
+    if ($firstPage.length) {
+      $firstPage.attr('tabindex', 0);
+    }
+  }
+};
+
+// this conditional check is so that we can unit test the functions above in this file without needing to
+// load in jquery.entwine
+if (typeof $.entwine === 'function') {
+  $.entwine('ss.tree', function($){
 
   $('.cms-tree').entwine({
 
@@ -131,9 +167,23 @@ $.entwine('ss.tree', function($){
             e.namespace = '';
             $(document).triggerHandler(e, data);
           })
+          // Update roving tabindex when a node is selected for keyboard accessibility
+          // Skip if root node is selected (e.g. mouse click on toggle) to preserve existing tabindex
+          .on('select_node.jstree', function(e, data) {
+            if (data.rslt && data.rslt.obj && data.rslt.obj.attr('id') === 'record-0') {
+              return;
+            }
+            resetTabindexToCurrentPage(self);
+          })
           .on('keydown', function(e) {
             var key = e.key;
             var target = e.target;
+
+            // Helper to get the toggle element (ins) for a li node
+            var getDirectToggle = function($li) {
+              var ins = $li.children('ins')[0];
+              return ins || null;
+            };
 
             // Helper to get the direct anchor (<a>) for a li node
             var getDirectAnchor = function($li) {
@@ -151,9 +201,9 @@ $.entwine('ss.tree', function($){
                 }
                 return getDirectAnchor($prev);
               }
-              // otherwise parent
+              // otherwise parent (but not root node)
               var $parent = $li.parents('li').first();
-              if ($parent.length) {
+              if ($parent.length && $parent.attr('id') !== 'record-0') {
                 return getDirectAnchor($parent);
               }
               return null;
@@ -173,8 +223,8 @@ $.entwine('ss.tree', function($){
               if ($next.length) {
                 return getDirectAnchor($next);
               }
-              // next ancestor sibling
-              var $ancestors = $li.parents('li');
+              // next ancestor sibling (but skip root node)
+              var $ancestors = $li.parents('li').not('#record-0');
               for (var i = 0; i < $ancestors.length; i++) {
                 var $ancestor = $($ancestors[i]);
                 var $nextAncestor = $ancestor.next('li');
@@ -188,16 +238,21 @@ $.entwine('ss.tree', function($){
             // Handle key events
             var $li = $(target).closest('li');
             if (key === 'Enter') {
-              // Enter already follows links, though for
-              // toggle icons (defined as .jstree-icon), it toggles
+              // Enter already follows links, though for toggle icons it toggles
               if ($(target).hasClass('jstree-icon')) {
                 $(this).jstree('toggle_node', $li);
               }
             } else if (key === ' ') {
-              // Pressing space toggles show/hide children if on the icon
-              // But not if on a link, as space will likely be used to move
-              // the page, as this is currently what's used on elemental
-              if ($(target).hasClass('jstree-icon')) {
+              // If in batch actions mode (tree has .multiple class) and on a link, toggle checkbox
+              if ($(this).hasClass('multiple') && $(target).is('a')) {
+                if ($li.hasClass('jstree-checked')) {
+                  $(this).jstree('uncheck_node', $li);
+                } else {
+                  $(this).jstree('check_node', $li);
+                }
+                e.preventDefault();
+              } else if ($(target).hasClass('jstree-icon')) {
+                // Pressing space toggles show/hide children if on the icon
                 $(this).jstree('toggle_node', $li);
               }
             } else if (key === 'ArrowLeft') {
@@ -205,12 +260,13 @@ $.entwine('ss.tree', function($){
               if ($li.hasClass('jstree-open')) {
                 $(this).jstree('close_node', $li);
               } else {
-                // If node is closed, focus on parent
+                // If node is closed, focus on parent (but not root)
                 var $parent = $li.parents('li').first();
-                if ($parent.length) {
-                  var parentAnchor = getDirectAnchor($parent);
-                  if (parentAnchor) {
-                    parentAnchor.focus();
+                if ($parent.length && $parent.attr('id') !== 'record-0') {
+                  var parentTarget = getDirectAnchor($parent);
+                  if (parentTarget) {
+                    updateRovingTabindex(self, $(parentTarget));
+                    parentTarget.focus();
                   }
                 }
               }
@@ -221,6 +277,7 @@ $.entwine('ss.tree', function($){
                 if ($child.length) {
                   var childAnchor = getDirectAnchor($child);
                   if (childAnchor) {
+                    updateRovingTabindex(self, $(childAnchor));
                     childAnchor.focus();
                   }
                 }
@@ -231,31 +288,34 @@ $.entwine('ss.tree', function($){
             } else if (key === 'ArrowUp') {
               var prev = getPrevVisible($li);
               if (prev) {
+                updateRovingTabindex(self, $(prev));
                 prev.focus();
               }
             } else if (key === 'ArrowDown') {
               var next = getNextVisible($li);
               if (next) {
+                updateRovingTabindex(self, $(next));
                 next.focus();
               }
             } else if (key === 'Home') {
-              // Focus on first sibling
-              var $siblings = $li.parent().children('li');
-              if ($siblings.length) {
-                var first = $siblings.first();
-                var fa = getDirectAnchor(first);
-                if (fa) {
-                  fa.focus();
+              // Focus on first page node (not root)
+              var $firstPage = self.find('li[data-id]').not('[data-id="0"]').first();
+              if ($firstPage.length) {
+                var firstAnchor = getDirectAnchor($firstPage);
+                if (firstAnchor) {
+                  updateRovingTabindex(self, $(firstAnchor));
+                  firstAnchor.focus();
                 }
               }
             } else if (key === 'End') {
-              // Focus on last sibling
-              var $siblings = $li.parent().children('li');
-              if ($siblings.length) {
-                var last = $siblings.last();
-                var la = getDirectAnchor(last);
-                if (la) {
-                  la.focus();
+              // Focus on last visible node
+              var $allVisible = self.find('li:visible');
+              if ($allVisible.length) {
+                var $last = $allVisible.last();
+                var lastAnchor = getDirectAnchor($last);
+                if (lastAnchor) {
+                  updateRovingTabindex(self, $(lastAnchor));
+                  lastAnchor.focus();
                 }
               }
             }
@@ -656,4 +716,7 @@ $.entwine('ss.tree', function($){
       return this.data('id');
     }
   });
-});
+  });
+}
+
+export { updateRovingTabindex, resetTabindexToCurrentPage };

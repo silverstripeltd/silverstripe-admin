@@ -82,16 +82,14 @@ Feature: Accessibility
     # Move focus to the element before the site tree so we have a known starting point
     When I focus on the "a[data-view='listview']" element
     And I press the "Tab" key globally
-    Then the ".jstree-no-checkboxes > .nodelete > .jstree-icon" element should have focus
-    When I press the "Tab" key globally
+
+    # Site tree is a tab-island
     Then the "a[title='(Record type: Page) Page 1']" element should have focus
 
-    # Pages and toggle icon each receive tab focus
-    When I press the "Tab" key globally
-    Then the ".jstree-closed .jstree-icon" element should have focus
-    When I press the "Tab" key globally
+    # Down moves to first page and then next siblings and skips toggle
+    When I press the "Down" key globally
     Then the "a[title='(Record type: Page) Page 2']" element should have focus
-    When I press the "Tab" key globally
+    When I press the "Down" key globally
     Then the "a[title='(Record type: Page) Page 3']" element should have focus
 
     # Up moves to previous sibling and skips toggle
@@ -100,11 +98,9 @@ Feature: Accessibility
     When I press the "Up" key globally
     Then the "a[title='(Record type: Page) Page 1']" element should have focus
 
-    # Down moves to next sibling
+    # Right arrow opens node if closed, focus stays on parent
     When I press the "Down" key globally
     Then the "a[title='(Record type: Page) Page 2']" element should have focus
-
-    # Right arrow opens node if closed, focus stays on parent
     When I press the "Right" key globally
     Then I should see "Page 2a"
     And the "a[title='(Record type: Page) Page 2']" element should have focus
@@ -114,24 +110,10 @@ Feature: Accessibility
     Then I should not see "Page 2a"
     And the "a[title='(Record type: Page) Page 2']" element should have focus
 
-    # Both Enter and Space on icon toggles node open/closed tab to icon
-    When I press the "Shift-Tab" key globally
-    Then the ".jstree-closed .jstree-icon" element should have focus
-    When I press the "Enter" key globally
-    Then I should see "Page 2a"
-    When I press the "Enter" key globally
-    Then I should not see "Page 2a"
-    When I press the "Space" key globally
-    Then I should see "Page 2a"
-
-    # Home/End moves to first/last sibling
-    When I press the "Tab" key globally
-    When I press the "Tab" key globally
+    # Right arrow on open node focus goes to first child
+    When I press the "Right" key globally
+    When I press the "Right" key globally
     And the "a[title='(Record type: Page) Page 2a']" element should have focus
-    When I press the "End" key globally
-    Then the "a[title='(Record type: Page) Page 2c']" element should have focus
-    When I press the "Home" key globally
-    Then the "a[title='(Record type: Page) Page 2a']" element should have focus
 
     # Can open nested children
     When I press the "Down" key globally
@@ -170,6 +152,24 @@ Feature: Accessibility
     Then the "a[title='(Record type: Page) Page 2c']" element should have focus
     When I press the "Down" key globally
     Then the "a[title='(Record type: Page) Page 3']" element should have focus
+
+    # Home/End moves to first/last child of the entire tree, even if nested
+    When I press the "Up" key globally
+    Then the "a[title='(Record type: Page) Page 2c']" element should have focus
+    When I press the "Home" key globally
+    Then the "a[title='(Record type: Page) Page 1']" element should have focus
+    When I press the "Down" key globally
+    When I press the "Down" key globally
+    Then the "a[title='(Record type: Page) Page 2a']" element should have focus
+    When I press the "End" key globally
+    Then the "a[title='(Record type: Page) Page 3']" element should have focus
+
+    # Shift-tab skip to the tab-island i.e. pages themselves are not tabbable
+    # Using this method to check that site tree is a tab-island because in this
+    # context it's the last tab-stop, meaning the next tab goes outside them cms
+    # to browser controls
+    When I press the "Shift-Tab" key globally
+    Then the ".page-view-link:nth-of-type(2)" element should have focus
 
   Scenario: Tab navigation on page using keyboard loads focused tab
     Given a "BasicFieldsTestPage" "My page"
@@ -237,6 +237,35 @@ Feature: Accessibility
     When I press the "Tab" key globally
     And I press the "Tab" key globally
     Then the "#Form_EditForm_Title" element should have focus
+
+  Scenario: Roving tabindex updates after breadcrumb navigation
+    Given a "Page" "Page 1"
+    And a "Page" "Page 2"
+    And the "Page" "Page 2a" is a child of a "Page" "Page 2"
+    And I am logged in with "ADMIN" permissions
+    And I go to "/admin/pages"
+    # Navigate to the site tree using keyboard
+    When I focus on the "a[data-view='listview']" element
+    And I press the "Tab" key globally
+    Then the "a[title='(Record type: Page) Page 1']" element should have focus
+    # Use arrow keys to navigate to Page 2a
+    When I press the "Down" key globally
+    Then the "a[title='(Record type: Page) Page 2']" element should have focus
+    When I press the "Right" key globally
+    Then I should see "Page 2a"
+    When I press the "Right" key globally
+    Then the "a[title='(Record type: Page) Page 2a']" element should have focus
+    # Press Enter to load Page 2a in the edit form
+    When I press the "Enter" key globally
+    Then I should see "Page 2a" in the ".breadcrumbs-wrapper" element
+    # Click the back button in the breadcrumb to navigate to Page 2
+    When I click on the ".toolbar__back-button" element
+    Then I should not see "Page 2a" in the ".breadcrumbs-wrapper" element
+    And I should see "Page 2" in the ".breadcrumbs-wrapper" element
+    # Tab back to the site tree - focus should be on Page 2 (the current page)
+    When I focus on the "a[data-view='listview']" element
+    And I press the "Tab" key globally
+    Then the "a[title='(Record type: Page) Page 2']" element should have focus
 
   Scenario: Tab navigation on dataobject edit form using keyboard loads focused tab
     # Note - not testing panel navigation because it's the same as the one page uses above
