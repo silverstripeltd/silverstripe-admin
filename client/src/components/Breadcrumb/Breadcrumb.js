@@ -1,27 +1,25 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import FileStatusIcon from 'components/FileStatusIcon/FileStatusIcon';
 import Link from 'components/Link/Link';
 
-class Breadcrumb extends Component {
+const Breadcrumb = ({ crumbs }) => {
   /**
    * @returns {Object|false}
    */
-  getLastCrumb() {
-    return this.props.crumbs && this.props.crumbs[this.props.crumbs.length - 1];
-  }
+  const getLastCrumb = () => crumbs && crumbs[crumbs.length - 1];
 
   /**
    * @returns {*}
    */
-  renderBreadcrumbs() {
-    if (!this.props.crumbs) {
+  const renderBreadcrumbs = () => {
+    if (!crumbs) {
       return null;
     }
 
-    return this.props.crumbs.slice(0, -1).map((crumb) => (
+    return crumbs.slice(0, -1).map((crumb) => (
       <li key={crumb.text} className="breadcrumb__item">
         <Link
           className="breadcrumb__item-title"
@@ -32,13 +30,46 @@ class Breadcrumb extends Component {
         </Link>
       </li>
     ));
-  }
+  };
+
+  /**
+   * @param {Array} icon
+   * @returns {*}
+   */
+  const renderIcons = (icons) => icons.map((icon, i) => {
+    const { className, hasRestrictedAccess, ...other } = icon;
+    let NodeName = icon.nodeName;
+    // reassign with let so linter won't suggest 'const' above for unmodified nodeName/className
+    let attrs = { ...other };
+    let extraClassName = classNames(['breadcrumb__icon', className]);
+    const iconClassNames = classNames(extraClassName.match(/font-icon-[^\s]+/g));
+    extraClassName = extraClassName.replace(/font-icon-[^\s]+\s?/g, '');
+    attrs = { tabIndex: '0', ...attrs };
+    if (attrs.hasOwnProperty('onClick') && !NodeName) {
+      NodeName = 'button';
+      extraClassName = classNames(extraClassName, 'btn btn-secondary');
+    }
+    attrs.key = `breadcrumb-icon-${i}`;
+    if (NodeName === 'FileStatusIcon') {
+      attrs.fileID = 0;
+      attrs.hasRestrictedAccess = hasRestrictedAccess;
+      attrs.extraClassName = extraClassName;
+      return <FileStatusIcon {...attrs} />;
+    }
+    if (!NodeName) {
+      NodeName = 'span';
+    }
+    attrs.className = extraClassName;
+    return <NodeName {...attrs} >
+      {iconClassNames && <span className={iconClassNames} aria-hidden="true" />}
+    </NodeName>;
+  });
 
   /**
    * @returns {*}
    */
-  renderLastCrumb() {
-    const crumb = this.getLastCrumb();
+  const renderLastCrumb = () => {
+    const crumb = getLastCrumb();
     if (!crumb) {
       return null;
     }
@@ -46,66 +77,26 @@ class Breadcrumb extends Component {
       <div className="breadcrumb__item breadcrumb__item--last">
         <h2 className="breadcrumb__item-title">
           {crumb.text}
-          {crumb.icon && this.renderIcons([crumb.icon])}
-          {crumb.icons && this.renderIcons(crumb.icons)}
+          {crumb.icon && renderIcons([crumb.icon])}
+          {crumb.icons && renderIcons(crumb.icons)}
         </h2>
       </div>
     );
-  }
+  };
 
-  /**
-   * @param {Array} icon
-   * @returns {*}
-   */
-  renderIcons(icons) {
-    return icons.map((icon, i) => {
-      const { className, hasRestrictedAccess, ...other } = icon;
-      let NodeName = icon.nodeName;
-      // reassign with let so linter won't suggest 'const' above for unmodified nodeName/className
-      let attrs = { ...other };
-      let extraClassName = classNames(['breadcrumb__icon', className]);
-      const iconClassNames = classNames(extraClassName.match(/font-icon-[^\s]+/g));
-      extraClassName = extraClassName.replace(/font-icon-[^\s]+\s?/g, '');
-      attrs = { tabIndex: '0', ...attrs };
-      if (attrs.hasOwnProperty('onClick') && !NodeName) {
-        NodeName = 'button';
-        extraClassName = classNames(extraClassName, 'btn btn-secondary');
+  return (
+    <div className="breadcrumb__container fill-height flexbox-area-grow">
+      { crumbs && crumbs.length > 1 &&
+        <div className="breadcrumb__list-container">
+          <ol className="breadcrumb">
+            {renderBreadcrumbs()}
+          </ol>
+        </div>
       }
-      attrs.key = `breadcrumb-icon-${i}`;
-      if (NodeName === 'FileStatusIcon') {
-        attrs.fileID = 0;
-        attrs.hasRestrictedAccess = hasRestrictedAccess;
-        attrs.extraClassName = extraClassName;
-        return <FileStatusIcon {...attrs} />;
-      }
-      if (!NodeName) {
-        NodeName = 'span';
-      }
-      attrs.className = extraClassName;
-      return <NodeName {...attrs} >
-        {iconClassNames && <span className={iconClassNames} aria-hidden="true" />}
-      </NodeName>;
-    });
-  }
-
-  /**
-   * @returns {*}
-   */
-  render() {
-    return (
-      <div className="breadcrumb__container fill-height flexbox-area-grow">
-        { this.props.crumbs && this.props.crumbs.length > 1 &&
-          <div className="breadcrumb__list-container">
-            <ol className="breadcrumb">
-              {this.renderBreadcrumbs()}
-            </ol>
-          </div>
-        }
-        {this.renderLastCrumb()}
-      </div>
-    );
-  }
-}
+      {renderLastCrumb()}
+    </div>
+  );
+};
 
 Breadcrumb.propTypes = {
   crumbs: PropTypes.arrayOf(PropTypes.shape({

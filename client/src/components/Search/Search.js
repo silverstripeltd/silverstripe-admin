@@ -1,6 +1,6 @@
 /* global document */
 import i18n from 'i18n';
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import * as schemaActions from 'state/schema/SchemaActions';
@@ -38,88 +38,95 @@ function hasFilters(filters) {
  * Displays a search component that can be use to retrieve a search term and
  * display an advanced search form.
  */
-class Search extends Component {
-  constructor(props) {
-    super(props);
+const Search = (_props) => {
+  const {
+    onSearch,
+    onHide,
+    id,
+    display = DISPLAY.VISIBLE,
+    formSchemaUrl,
+    filters = {},
+    formData = {},
+    placeholder = i18n._t('Admin.SEARCH', 'Search'),
+    displayBehavior = BEHAVIOR.NONE,
+    term = '',
+    name = 'searchTerm',
+    filterPrefix = '',
+    forceFilters = false,
+    formIsDirty,
+    identifier = 'Admin.SearchForm',
+    schemaName,
+    tagData,
+    actions,
+    // This prop is unused in this component, but has a default value and is passed into SearchBox
+    addFilterPrefix = false,
+  } = _props;
 
-    this.expand = this.expand.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-    this.getData = this.getData.bind(this);
-    this.doSearch = this.doSearch.bind(this);
-    this.focusInput = this.focusInput.bind(this);
-    this.focusFirstFormField = this.focusFirstFormField.bind(this);
-    this.hide = this.hide.bind(this);
-    this.show = this.show.bind(this);
-    this.toggle = this.toggle.bind(this);
-    this.open = this.open.bind(this);
-    this.searchTermIsDirty = this.searchTermIsDirty.bind(this);
-    this.clearFilters = this.clearFilters.bind(this);
-    this.clearSearchBox = this.clearSearchBox.bind(this);
-    this.clearFormFilter = this.clearFormFilter.bind(this);
-    this.focusFormFilter = this.focusFormFilter.bind(this);
-    this.formatTagData = this.formatTagData.bind(this);
-    this.onClickOut = this.onClickOut.bind(this);
+  const props = {
+    ..._props,
+    // Use either the value passed into the component, or the default value
+    display,
+    filters,
+    formData,
+    placeholder,
+    displayBehavior,
+    term,
+    name,
+    filterPrefix,
+    forceFilters,
+    identifier,
+    addFilterPrefix
+  };
 
-    const term = props.term
-      || (props.filters && props.filters[`${props.filterPrefix}${props.name}`])
-      || '';
+  const nodeRef = useRef(null);
 
-    this.state = {
-      display: props.display,
-      searchText: term,
-      initialSearchText: term,
-      forceLoadForm: false,
-    };
-  }
+  const termInit = term
+    || (filters && filters[`${filterPrefix}${name}`])
+    || '';
 
-  componentDidMount() {
-    this.setOverrides(this.props);
-  }
-
-  componentWillUnmount() {
-    this.setOverrides();
-  }
+  const [displayState, setDisplayState] = useState(display);
+  const [searchText, setSearchText] = useState(termInit);
+  const [initialSearchText, setInitialSearchText] = useState(termInit);
+  const [forceLoadForm, setForceLoadForm] = useState(false);
 
   /**
    * Populate search form with search in case a pre-existing search has been queried
    *
-   * @param {Object} props
+   * @param {Object} propsArg
    */
-  setOverrides(props) {
-    if (props && (
-      !hasFilters(props.filters) || this.props.formSchemaUrl !== props.formSchemaUrl
+  const setOverrides = (propsArg) => {
+    if (propsArg && (
+      !hasFilters(propsArg.filters) || formSchemaUrl !== propsArg.formSchemaUrl
     )) {
       // clear any overrides that may be in place
-      const schemaUrl = (props && props.formSchemaUrl) || this.props.formSchemaUrl;
+      const schemaUrl = (propsArg && propsArg.formSchemaUrl) || formSchemaUrl;
       if (schemaUrl) {
-        this.props.actions.schema.setSchemaStateOverrides(schemaUrl, null);
+        actions.schema.setSchemaStateOverrides(schemaUrl, null);
       }
     }
 
-    if (props && (hasFilters(props.filters) && props.formSchemaUrl)) {
-      const filters = props.filters || {};
+    if (propsArg && (hasFilters(propsArg.filters) && propsArg.formSchemaUrl)) {
+      const filtersArg = propsArg.filters || {};
       const overrides = {
         fields: Object
-          .keys(filters)
-          .map((name) => {
-            const value = filters[name];
-            return { name, value };
+          .keys(filtersArg)
+          .map((mapName) => {
+            const value = filtersArg[mapName];
+            return { name: mapName, value };
           }),
       };
 
       // set overrides into redux store, so that it can be accessed by FormBuilder with the same
       // schemaUrl.
-      this.props.actions.schema.setSchemaStateOverrides(props.formSchemaUrl, overrides);
+      actions.schema.setSchemaStateOverrides(propsArg.formSchemaUrl, overrides);
     }
-  }
+  };
 
   /**
    * Get the search criteria compiled into an object.
    * @returns {Object}
    */
-  getData(ignoreSearchTerm = false) {
-    const { name, filterPrefix, formData } = this.props;
-    const { searchText } = this.state;
+  const getData = (ignoreSearchTerm = false) => {
     const data = {};
 
     // Filter empty values
@@ -148,33 +155,32 @@ class Search extends Component {
     }
 
     return data;
-  }
+  };
 
   /**
    * Update the state search term form an input field change event.
    * @param {Object} event onChangeEvent from a input field.
    */
-  handleChange(event) {
+  const handleChange = (event) => {
     const value = event.target.value;
-    if (this.state.searchText !== value) {
-      this.setState({ searchText: value });
+    if (searchText !== value) {
+      setSearchText(value);
     }
 
-    const { schemaName, name, filterPrefix, actions, formData } = this.props;
     if (typeof formData[`${filterPrefix}${name}`] !== 'undefined') {
       actions.reduxForm.change(schemaName, `${filterPrefix}${name}`, value);
     }
-  }
+  };
 
   /**
    * Try to find the input field and focus on it.
    */
-  focusInput() {
-    if (this.state.display === DISPLAY.NONE) {
+  const focusInput = () => {
+    if (displayState === DISPLAY.NONE) {
       return;
     }
 
-    const node = this.nodeRef.container;
+    const node = nodeRef.current.container;
     if (!node) {
       return;
     }
@@ -187,17 +193,17 @@ class Search extends Component {
         input.select();
       }
     }
-  }
+  };
 
   /**
    * Try to find the first form field in the advanced form and focus on it.
    */
-  focusFirstFormField(filter = 'input:not([type=hidden]), textarea, select, button') {
-    if (this.state.display !== DISPLAY.EXPANDED) {
+  const focusFirstFormField = (filter = 'input:not([type=hidden]), textarea, select, button') => {
+    if (displayState !== DISPLAY.EXPANDED) {
       return;
     }
 
-    const node = this.nodeRef.container;
+    const node = nodeRef.current.container;
     if (!node) {
       return;
     }
@@ -215,178 +221,43 @@ class Search extends Component {
         input.select();
       }
     }
-  }
+  };
 
   /**
    * Clear the search term and any advanced search form data.
-   * @param {Object} props
+   * @param {Object} propsArg
    */
-  clearFormData(props) {
-    if (this.state.searchText !== '') {
-      this.setState({ searchText: '' });
+  const clearFormData = (propsArg) => {
+    if (searchText !== '') {
+      setSearchText('');
     }
 
-    const formSchemaUrl = (props && props.formSchemaUrl) || this.props.formSchemaUrl;
-    if (formSchemaUrl) {
-      const identifier = (props && props.identifier) || this.props.identifier;
-      this.props.actions.schema.setSchemaStateOverrides(formSchemaUrl, { fields: [] });
-      this.props.actions.reduxForm.reset(identifier);
+    const formSchemaUrlArg = (propsArg && propsArg.formSchemaUrl) || formSchemaUrl;
+    if (formSchemaUrlArg) {
+      const identifierArg = (propsArg && propsArg.identifier) || identifier;
+      actions.schema.setSchemaStateOverrides(formSchemaUrlArg, { fields: [] });
+      actions.reduxForm.reset(identifierArg);
     }
-  }
-
-  /**
-   * Clear a search filter and execute a new search
-   * @param {string} key Search filter name to clear
-   */
-  clearFormFilter(key) {
-    const tag = this.props.tagData[key];
-    const clearables = { [key]: undefined };
-
-    const { schemaName, filters } = this.props;
-    this.props.actions.reduxForm.change(schemaName, key, '');
-    this.setOverrides({
-      ...this.props,
-      filters: {
-        ...filters,
-        [key]: undefined
-      }
-    });
-
-    if (Array.isArray(tag.linkedFields)) {
-      tag.linkedFields.forEach(linkFieldkey => { clearables[linkFieldkey] = undefined; });
-    }
-    this.doSearch(clearables);
-  }
-
-  /**
-   * Focus on the requested search filter name.
-   * @param {string} key Search filter name.
-   */
-  focusFormFilter(key) {
-    const tag = this.props.tagData[key];
-    const selector = tag.focusSelector || `[name=${key}]`;
-    this.expand();
-    setTimeout(() => this.focusFirstFormField(selector), 50);
-  }
-
-  onClickOut(evt) {
-    // This is a fairly rudimentory way to detect if the user clicked on an entirely different
-    // DOM element, which probably uses jQuery
-    // It's important that we only call show() when a relevent element is clicked, otherwise we'll
-    // end up making lots of unnecessary AJAX requests to the form schema endpoint
-    const buttonEl = evt.target;
-    const $componentEl = window.jQuery(this.nodeRef.container);
-    const filterButtonClicked = buttonEl.matches('#filters-button, .font-icon-search, .filter-open');
-    // The visibility check is needed to avoid loading the form for hidden tabs (e.g. in ModelAdmin)
-    if (filterButtonClicked && $componentEl.is(':visible')) {
-      const buttonGridField = window.jQuery(buttonEl).closest('.grid-field');
-      const componentGridField = $componentEl.closest('.grid-field');
-      if (buttonGridField.length > 0 && componentGridField.length > 0) {
-        // Only show the form for the relevant GridField
-        if (buttonGridField[0] === componentGridField[0]) {
-          this.show();
-        }
-      } else {
-        // This is not a GridField, e.g. for CMSMain
-        this.show();
-      }
-    }
-  }
-
-  /**
-   * Show the Search box and set the focus on it after a slight delay.
-   */
-  open() {
-    this.show();
-    this.focusInput();
-  }
-
-  /**
-   * Hide this field. When clicking the "X" button. If an `onHide` method has
-   * been provided it will be called and the global state will have to update
-   * the display props. Otherwise, the internal state will be updated instead.
-   */
-  hide() {
-    this.clearSearchBox();
-    if (this.props.onHide) {
-      this.props.onHide();
-    } else if (this.state.display !== DISPLAY.NONE) {
-      this.setState({ display: DISPLAY.NONE });
-    }
-  }
-
-  /**
-   * Show this field when the Search Toggle is click.
-   */
-  show() {
-    this.setState({ forceLoadForm: true });
-    if (this.state.display !== DISPLAY.VISIBLE) {
-      this.setState({ display: DISPLAY.VISIBLE });
-    }
-    const { schemaName, formData, name, actions } = this.props;
-    if (typeof formData[name] !== 'undefined') {
-      actions.reduxForm.change(schemaName, name, this.state.searchText);
-    }
-  }
-
-  /**
-   * Expand fully form
-   */
-  expand() {
-    if (this.state.display !== DISPLAY.EXPANDED) {
-      this.setState({ display: DISPLAY.EXPANDED });
-    }
-  }
-
-  /**
-   * When toggling the advanced button
-   */
-  toggle() {
-    switch (this.state.display) {
-      case DISPLAY.VISIBLE:
-        this.expand();
-        setTimeout(this.focusFirstFormField, 50);
-        break;
-      case DISPLAY.EXPANDED:
-        this.show();
-        break;
-      default:
-        // noop
-    }
-  }
-
-  /**
-   * Determine if the search term has changed since the last search.
-   * @returns {boolean}
-   */
-  searchTermIsDirty() {
-    const { searchText, initialSearchText } = this.state;
-    return searchText.trim() !== initialSearchText.trim();
-  }
+  };
 
   /**
    * Wrap up all the data into an object and call the onSearch method provided via the props.
    * @param {Object} overrides Data to overrides over our existing form data.
    */
-  doSearch(overrides = {}) {
+  const doSearch = (overrides = {}) => {
     // Data to send to the remote service
-    const { name, filterPrefix } = this.props;
     const searchData = {};
-    const fieldData = this.getData();
-
+    const fieldData = getData();
     Object.entries(fieldData).forEach(([key, value]) => {
       // Strip any prefix from the key
       let newKey = key;
       let newValue = value;
-
       if (overrides.hasOwnProperty(key)) {
         newValue = overrides[key];
       }
-
       if (filterPrefix.length > 0 && key.startsWith(filterPrefix)) {
         newKey = key.substring(filterPrefix.length);
       }
-
       // Avoid adding prefixed and unprefixed keys, preferring the prefixed
       if (
         !filterPrefix.length > 0
@@ -396,45 +267,157 @@ class Search extends Component {
         searchData[newKey] = newValue;
       }
     });
-
-    const searchText = searchData[name] || '';
+    const searchTextData = searchData[name] || '';
     if (
-      this.state.display !== DISPLAY.VISIBLE ||
-      this.state.initialSearchText !== searchText ||
-      this.state.searchText !== searchText
+      displayState !== DISPLAY.VISIBLE ||
+      initialSearchText !== searchTextData ||
+      searchText !== searchTextData
     ) {
-      this.setState({
-        display: DISPLAY.VISIBLE,
-        initialSearchText: searchText,
-        searchText
-      });
+      setDisplayState(DISPLAY.VISIBLE);
+      setInitialSearchText(searchTextData);
+      setSearchText(searchTextData);
     }
-
-    this.props.onSearch(searchData);
-  }
+    onSearch(searchData);
+  };
 
   /**
-   * Clear the Search component and focus on the first filter field.
+   * Clear a search filter and execute a new search
+   * @param {string} key Search filter name to clear
    */
-  clearFilters() {
-    this.clearFormData();
-    this.focusFirstFormField();
-  }
+  const clearFormFilter = (key) => {
+    const tagItem = tagData[key];
+    const clearables = { [key]: undefined };
+
+    actions.reduxForm.change(schemaName, key, '');
+    setOverrides({
+      ...props,
+      filters: {
+        ...filters,
+        [key]: undefined
+      }
+    });
+
+    if (Array.isArray(tagItem.linkedFields)) {
+      tagItem.linkedFields.forEach(linkFieldkey => { clearables[linkFieldkey] = undefined; });
+    }
+    doSearch(clearables);
+  };
+
+  /**
+   * Expand fully form
+   */
+  const expand = () => {
+    if (displayState !== DISPLAY.EXPANDED) {
+      setDisplayState(DISPLAY.EXPANDED);
+    }
+  };
+
+  /**
+   * Focus on the requested search filter name.
+   * @param {string} key Search filter name.
+   */
+  const focusFormFilter = (key) => {
+    const tagItem = tagData[key];
+    const selector = tagItem.focusSelector || `[name=${key}]`;
+    expand();
+    setTimeout(() => focusFirstFormField(selector), 50);
+  };
 
   /**
    * Clear the Search component and focus on the main input field.
    */
-  clearSearchBox() {
-    this.clearFormData();
-    this.focusInput();
-  }
+  const clearSearchBox = () => {
+    clearFormData();
+    focusInput();
+  };
+
+  /**
+   * Hide this field. When clicking the "X" button. If an `onHide` method has
+   * been provided it will be called and the global state will have to update
+   * the display props. Otherwise, the internal state will be updated instead.
+   */
+  const hide = () => {
+    clearSearchBox();
+    if (onHide) {
+      onHide();
+    } else if (displayState !== DISPLAY.NONE) {
+      setDisplayState(DISPLAY.NONE);
+    }
+  };
+
+  /**
+   * Show this field when the Search Toggle is click.
+   */
+  const show = () => {
+    setForceLoadForm(true);
+    if (displayState !== DISPLAY.VISIBLE) {
+      setDisplayState(DISPLAY.VISIBLE);
+    }
+    if (typeof formData[name] !== 'undefined') {
+      actions.reduxForm.change(schemaName, name, searchText);
+    }
+  };
+
+  const onClickOut = (evt) => {
+    // This is a fairly rudimentory way to detect if the user clicked on an entirely different
+    // DOM element, which probably uses jQuery
+    // It's important that we only call show() when a relevent element is clicked, otherwise we'll
+    // end up making lots of unnecessary AJAX requests to the form schema endpoint
+    const buttonEl = evt.target;
+    const $componentEl = window.jQuery(nodeRef.current.container);
+    const filterButtonClicked = buttonEl.matches('#filters-button, .font-icon-search, .filter-open');
+    // The visibility check is needed to avoid loading the form for hidden tabs (e.g. in ModelAdmin)
+    if (filterButtonClicked && $componentEl.is(':visible')) {
+      const buttonGridField = window.jQuery(buttonEl).closest('.grid-field');
+      const componentGridField = $componentEl.closest('.grid-field');
+      if (buttonGridField.length > 0 && componentGridField.length > 0) {
+        // Only show the form for the relevant GridField
+        if (buttonGridField[0] === componentGridField[0]) {
+          show();
+        }
+      } else {
+        // This is not a GridField, e.g. for CMSMain
+        show();
+      }
+    }
+  };
+
+  /**
+   * When toggling the advanced button
+   */
+  const toggle = () => {
+    switch (displayState) {
+      case DISPLAY.VISIBLE:
+        expand();
+        setTimeout(focusFirstFormField, 50);
+        break;
+      case DISPLAY.EXPANDED:
+        show();
+        break;
+      default:
+        // noop
+    }
+  };
+
+  /**
+   * Determine if the search term has changed since the last search.
+   * @returns {boolean}
+   */
+  const searchTermIsDirty = () => searchText.trim() !== initialSearchText.trim();
+
+  /**
+   * Clear the Search component and focus on the first filter field.
+   */
+  const clearFilters = () => {
+    clearFormData();
+    focusFirstFormField();
+  };
 
   /**
    * Take the provided tagData and format in way that will make sense for TagList.
    * @returns {Object[]}
    */
-  formatTagData() {
-    const { tagData, name, filterPrefix } = this.props;
+  const formatTagData = () => {
     const tagDataCopy = Object.assign({}, tagData);
     const nameKey = `${filterPrefix}${name}`;
 
@@ -447,72 +430,73 @@ class Search extends Component {
     return tagDataCopy ?
       Object.values(tagDataCopy).map(({ key, label, value }) => ({ key, label, value })) :
       [];
-  }
+  };
 
-  render() {
-    const { formSchemaUrl, forceFilters, id, displayBehavior,
-      identifier, formIsDirty, tagData, name, ...props } = this.props;
-
-    // If the box is not to be displayed
-    if (this.state.display === DISPLAY.NONE) {
-      if (displayBehavior === BEHAVIOR.TOGGLABLE) {
-        return (<SearchToggle onToggle={this.show} />);
-      }
-      return (<div />);
+  // If the box is not to be displayed
+  if (displayState === DISPLAY.NONE) {
+    if (displayBehavior === BEHAVIOR.TOGGLABLE) {
+      return (<SearchToggle onToggle={show} />);
     }
-
-    // Display the SearchBox
-    const formId = `${id}_ExtraFields`;
-    const searchText = this.state.searchText;
-
-    // Build classes
-    const expanded = this.state.display === DISPLAY.EXPANDED;
-
-    // Decide if we display the X button
-    const hideable =
-      [BEHAVIOR.HIDEABLE, BEHAVIOR.TOGGLABLE].includes(displayBehavior);
-
-    const dirty = formIsDirty || this.searchTermIsDirty();
-    const data = this.getData();
-    const clearable = (Object.keys(data).length > 0);
-
-    return (
-      <Focusedzone onClickOut={this.onClickOut} className="search" ref={node => { this.nodeRef = node; }}>
-        <SearchBox
-          {...props}
-          name={`SearchBox__${name}`}
-          onChange={this.handleChange}
-          onSearch={this.doSearch}
-          onToggleFilter={this.toggle}
-          onHideFilter={this.show}
-          onHide={this.hide}
-          onClear={this.clearSearchBox}
-          searchText={searchText}
-          hideable={hideable}
-          expanded={expanded}
-          id={`${id}_searchbox`}
-          showFilters={Boolean(forceFilters || formSchemaUrl)}
-          dirty={dirty}
-          clearable={clearable}
-          onTagDelete={this.clearFormFilter}
-          onTagClick={this.focusFormFilter}
-          tagData={this.formatTagData()}
-        >
-          <SearchForm
-            id={formId}
-            identifier={identifier}
-            expanded={expanded}
-            forceLoadForm={this.state.forceLoadForm}
-            formSchemaUrl={formSchemaUrl}
-            onSearch={this.doSearch}
-            onClear={this.clearFilters}
-            clearable={clearable}
-          />
-        </SearchBox>
-      </Focusedzone>
-    );
+    return (<div />);
   }
-}
+
+  useEffect(() => {
+    // Set overrides on mount
+    setOverrides(props);
+    // Clear overrides on unmount
+    return () => setOverrides();
+  }, []);
+
+  // Display the SearchBox
+  const formId = `${id}_ExtraFields`;
+
+  // Build classes
+  const expanded = displayState === DISPLAY.EXPANDED;
+
+  // Decide if we display the X button
+  const hideable =
+    [BEHAVIOR.HIDEABLE, BEHAVIOR.TOGGLABLE].includes(displayBehavior);
+
+  const dirty = formIsDirty || searchTermIsDirty();
+  const data = getData();
+  const clearable = (Object.keys(data).length > 0);
+
+  return (
+    <Focusedzone onClickOut={onClickOut} className="search" ref={nodeRef}>
+      <SearchBox
+        {...props}
+        name={`SearchBox__${name}`}
+        onChange={handleChange}
+        onSearch={doSearch}
+        onToggleFilter={toggle}
+        onHideFilter={show}
+        onHide={hide}
+        onClear={clearSearchBox}
+        searchText={searchText}
+        hideable={hideable}
+        expanded={expanded}
+        id={`${id}_searchbox`}
+        showFilters={Boolean(forceFilters || formSchemaUrl)}
+        dirty={dirty}
+        clearable={clearable}
+        onTagDelete={clearFormFilter}
+        onTagClick={focusFormFilter}
+        tagData={formatTagData()}
+      >
+        <SearchForm
+          id={formId}
+          identifier={identifier}
+          expanded={expanded}
+          forceLoadForm={forceLoadForm}
+          formSchemaUrl={formSchemaUrl}
+          onSearch={doSearch}
+          onClear={clearFilters}
+          clearable={clearable}
+        />
+      </SearchBox>
+    </Focusedzone>
+  );
+};
 
 Search.propTypes = {
   onSearch: PropTypes.func,
@@ -540,20 +524,6 @@ Search.propTypes = {
     bottom: PropTypes.bool,
     left: PropTypes.bool,
   })
-};
-
-Search.defaultProps = {
-  placeholder: i18n._t('Admin.SEARCH', 'Search'),
-  display: DISPLAY.VISIBLE,
-  displayBehavior: BEHAVIOR.NONE,
-  filters: {},
-  addFilterPrefix: false,
-  formData: {},
-  term: '',
-  filterPrefix: '',
-  forceFilters: false,
-  name: 'searchTerm',
-  identifier: 'Admin.SearchForm'
 };
 
 function mapStateToProps(state, ownProps) {
