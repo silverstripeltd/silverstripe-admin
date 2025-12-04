@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { memo } from 'react';
 import PropTypes from 'prop-types';
 import i18n from 'i18n';
 import classNames from 'classnames';
@@ -9,17 +9,25 @@ const cssClass = 'file-status-icon';
 /**
  * File status icon (e.g. restricted access) with a tooltip
  */
-class FileStatusIcon extends PureComponent {
+const FileStatusIcon = ({
+  fileID,
+  hasRestrictedAccess,
+  isTrackedFormUpload,
+  placement = 'auto',
+  extraClassName,
+  disableTooltip = false,
+  includeBackground
+}) => {
   /**
-   * @param {boolean} hasRestrictedAccess
+   * @param {boolean} hasRestrictedAccessParam
    * @returns {Object}
    */
-  buildTrackedFormUpload(hasRestrictedAccess) {
-    const fontIconClass = hasRestrictedAccess
+  const buildTrackedFormUpload = (hasRestrictedAccessParam) => {
+    const fontIconClass = hasRestrictedAccessParam
       ? 'font-icon-address-card'
       : 'font-icon-address-card-warning';
     const className = classNames('icon', `${cssClass}__icon`, fontIconClass);
-    const dataTitle = hasRestrictedAccess
+    const dataTitle = hasRestrictedAccessParam
       ? i18n._t(
         'SilverStripe\\Admin\\FileStatusIcon.TRACKED_FORM_UPLOAD_RESTRICTED',
         'Form submission'
@@ -29,61 +37,50 @@ class FileStatusIcon extends PureComponent {
         'Form submission, unrestricted access'
       );
     return { className, 'data-title': dataTitle, 'aria-label': dataTitle };
-  }
+  };
 
   /**
    * @returns {Object}
    */
-  buildRestrictedFileAttrs() {
+  const buildRestrictedFileAttrs = () => {
     const className = classNames('icon', `${cssClass}__icon`, 'font-icon-user-lock');
     const dataTitle = i18n._t(
       'SilverStripe\\Admin\\FileStatusIcon.ACCESS_RESTRICTED',
       'Restricted access'
     );
     return { className, 'data-title': dataTitle, 'aria-label': dataTitle };
-  }
+  };
 
   /**
-   * @param {string} placement
+   * @param {string} placementParam
    * @param {string} id
    * @param {string} title
    * @returns {*}
    */
-  renderTooltip(placement, id, title) {
-    return (
-      <UncontrolledTooltip placement={placement} target={id} delay={{ show: 300, hide: 0 }}>
-        {title}
-      </UncontrolledTooltip>
-    );
-  }
+  const renderTooltip = (placementParam, id, title) => (
+    <UncontrolledTooltip placement={placementParam} target={id} delay={{ show: 300, hide: 0 }}>
+      {title}
+    </UncontrolledTooltip>
+  );
 
-  /**
-   * @returns {*}
-   */
-  render() {
-    const {
-      fileID, hasRestrictedAccess, isTrackedFormUpload, placement, extraClassName,
-      disableTooltip, includeBackground
-    } = this.props;
-    if (!isTrackedFormUpload && !hasRestrictedAccess) {
-      return '';
-    }
-    const backgroundClass = includeBackground ? 'file-status-icon--background' : '';
-    const className = classNames([cssClass, backgroundClass, extraClassName]);
-    const attrs = isTrackedFormUpload
-      ? this.buildTrackedFormUpload(hasRestrictedAccess)
-      : this.buildRestrictedFileAttrs();
-    const idType = isTrackedFormUpload ? 'tracked-form-upload' : 'restricted';
-    const id = `FileStatusIcon-${idType}-${fileID}`;
-    const tooltip = disableTooltip ? '' : this.renderTooltip(placement, id, attrs['data-title']);
-    return (
-      <div className={className}>
-        <span id={id} {...attrs} />
-        {tooltip}
-      </div>
-    );
+  if (!isTrackedFormUpload && !hasRestrictedAccess) {
+    return '';
   }
-}
+  const backgroundClass = includeBackground ? 'file-status-icon--background' : '';
+  const className = classNames([cssClass, backgroundClass, extraClassName]);
+  const attrs = isTrackedFormUpload
+    ? buildTrackedFormUpload(hasRestrictedAccess)
+    : buildRestrictedFileAttrs();
+  const idType = isTrackedFormUpload ? 'tracked-form-upload' : 'restricted';
+  const id = `FileStatusIcon-${idType}-${fileID}`;
+  const tooltip = disableTooltip ? '' : renderTooltip(placement, id, attrs['data-title']);
+  return (
+    <div className={className}>
+      <span id={id} {...attrs} />
+      {tooltip}
+    </div>
+  );
+};
 
 FileStatusIcon.propTypes = {
   fileID: PropTypes.number,
@@ -95,9 +92,5 @@ FileStatusIcon.propTypes = {
   includeBackground: PropTypes.bool
 };
 
-FileStatusIcon.defaultProps = {
-  placement: 'auto',
-  disableTooltip: false
-};
-
-export default FileStatusIcon;
+// Wrapping export in React.memo() because the old class component extended React.PureComponent
+export default memo(FileStatusIcon);

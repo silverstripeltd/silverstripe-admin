@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import { Alert } from 'reactstrap';
 import castStringToElement from 'lib/castStringToElement';
 import classnames from 'classnames';
@@ -8,16 +8,16 @@ import PropTypes from 'prop-types';
  * A wrapper for Alert messages in reactstrap.
  * Displays a given message.
  */
-class FormAlert extends Component {
-  constructor(props) {
-    super(props);
-
-    this.handleClosed = this.handleClosed.bind(this);
-
-    this.state = {
-      visible: true,
-    };
-  }
+const FormAlert = ({
+  extraClass = '',
+  className = '',
+  type,
+  value,
+  onClosed,
+  closeLabel,
+  visible,
+}) => {
+  const [isVisible, setIsVisible] = useState(true);
 
   /**
    * Determines the style for the alert box to be shown based on messageType or other property
@@ -25,9 +25,9 @@ class FormAlert extends Component {
    *
    * @returns {string} can be the following values "success", "warning", "danger", "info"
    */
-  getMessageStyle() {
+  const getMessageStyle = () => {
     // See ValidationResult::TYPE_ constant definitions in PHP.
-    switch (this.props.type) {
+    switch (type) {
       case 'good':
       case 'success':
         return 'success';
@@ -39,54 +39,52 @@ class FormAlert extends Component {
       default:
         return 'danger';
     }
-  }
+  };
+
+  /**
+   * Handler for when the message box is dismissed and hidden
+   */
+  const handleClosed = () => {
+    if (typeof onClosed === 'function') {
+      onClosed();
+    } else {
+      setIsVisible(false);
+    }
+  };
 
   /**
    * Generate the properties for the FormAlert
    * @returns {object} properties
    */
-  getMessageProps() {
-    const type = this.props.type || 'no-type';
+  const getMessageProps = () => {
+    const typeValue = type || 'no-type';
 
     return {
       className: classnames([
         'message-box',
-        `message-box--${type}`,
-        this.props.className,
-        this.props.extraClass,
+        `message-box--${typeValue}`,
+        className,
+        extraClass,
       ]),
-      color: this.getMessageStyle(),
-      toggle: (this.props.closeLabel) ? this.handleClosed : null,
-      isOpen: (this.props.closeLabel) ? this.state.visible : true,
+      color: getMessageStyle(),
+      toggle: (closeLabel) ? handleClosed : null,
+      isOpen: (closeLabel) ? isVisible : true,
     };
-  }
+  };
 
-  /**
-   * Handler for when the message box is dismissed and hidden
-   */
-  handleClosed() {
-    if (typeof this.props.onClosed === 'function') {
-      this.props.onClosed();
-    } else {
-      this.setState({ visible: false });
+  if ((typeof visible !== 'boolean' && isVisible) || visible) {
+    // needs to be inside a div because the `Alert` component does some magic with props.children
+    const body = castStringToElement('div', value);
+    if (body) {
+      return (
+        <Alert {...getMessageProps()}>
+          {body}
+        </Alert>
+      );
     }
   }
-
-  render() {
-    if ((typeof this.props.visible !== 'boolean' && this.state.visible) || this.props.visible) {
-      // needs to be inside a div because the `Alert` component does some magic with props.children
-      const body = castStringToElement('div', this.props.value);
-      if (body) {
-        return (
-          <Alert {...this.getMessageProps()}>
-            {body}
-          </Alert>
-        );
-      }
-    }
-    return null;
-  }
-}
+  return null;
+};
 
 FormAlert.propTypes = {
   extraClass: PropTypes.string,
@@ -95,11 +93,7 @@ FormAlert.propTypes = {
   onClosed: PropTypes.func,
   closeLabel: PropTypes.string,
   visible: PropTypes.bool,
-};
-
-FormAlert.defaultProps = {
-  extraClass: '',
-  className: '',
+  className: PropTypes.string,
 };
 
 export default FormAlert;
