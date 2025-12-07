@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { memo } from 'react';
 import classnames from 'classnames';
 import PropTypes from 'prop-types';
 
@@ -16,28 +16,30 @@ export const statuses = [
   'secondary',
 ];
 
-class Badge extends PureComponent {
-  render() {
-    const { status, inverted, className, message } = this.props;
-    if (!status) {
-      return null;
-    }
-
-    const colourClass = inverted ? `text-bg-${status}--inverted` : `text-bg-${status}`;
-
-    const compiledClassNames = classnames(
-      className,
-      'badge',
-      `badge-${status}`,
-      colourClass,
-    );
-    return (
-      <span className={compiledClassNames}>
-        {message}
-      </span>
-    );
+const Badge = ({
+  status = 'default',
+  inverted = false,
+  className = 'rounded-pill',
+  message,
+}) => {
+  if (!status) {
+    return null;
   }
-}
+
+  const colourClass = inverted ? `text-bg-${status}--inverted` : `text-bg-${status}`;
+
+  const compiledClassNames = classnames(
+    className,
+    'badge',
+    `badge-${status}`,
+    colourClass,
+  );
+  return (
+    <span className={compiledClassNames}>
+      {message}
+    </span>
+  );
+};
 
 Badge.propTypes = {
   message: PropTypes.node,
@@ -46,10 +48,5 @@ Badge.propTypes = {
   inverted: PropTypes.bool,
 };
 
-Badge.defaultProps = {
-  status: 'default',
-  className: 'rounded-pill',
-  inverted: false,
-};
-
-export default Badge;
+// Wrapping export in React.memo() because the old class component extended React.PureComponent
+export default memo(Badge);

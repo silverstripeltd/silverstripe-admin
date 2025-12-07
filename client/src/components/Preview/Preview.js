@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import i18n from 'i18n';
 import classnames from 'classnames';
 import { inject } from 'lib/Injector';
@@ -8,54 +8,66 @@ import ActionMenu from '../ActionMenu/ActionMenu';
 /**
  * Renders the right-hand collapsable change preview panel
  */
-class Preview extends Component {
-  constructor(props) {
-    super(props);
+const Preview = ({
+  className = 'flexbox-area-grow fill-height',
+  itemLinks,
+  itemId,
+  onBack,
+  moreActions,
+  ViewModeComponent,
+}) => {
+  const lastPreviewUrlRef = useRef(null);
+  const [frameLoaded, setFrameLoaded] = useState(false);
 
-    this.state = {
-      frameLoaded: false,
-    };
-
-    this.handleBackClick = this.handleBackClick.bind(this);
-    this.setFrameLoaded = this.setFrameLoaded.bind(this);
+  let previewUrl = null;
+  let previewType = '';
+  if (itemLinks && itemLinks.preview) {
+    if (itemLinks.preview.Stage) {
+      previewUrl = itemLinks.preview.Stage.href;
+      previewType = itemLinks.preview.Stage.type;
+    } else if (itemLinks.preview.Live) {
+      previewUrl = itemLinks.preview.Live.href;
+      previewType = itemLinks.preview.Live.type;
+    }
   }
 
-  componentDidUpdate(prevProps) {
+  useEffect(() => {
     // Reset frame loaded state when the preview URL changes
-    if (!this.state.frameLoaded) {
+    if (!frameLoaded) {
       return;
     }
-
-    if (prevProps.previewUrl !== this.props.previewUrl) {
-      this.setFrameLoaded(false);
+    if (lastPreviewUrlRef.current !== previewUrl) {
+      setFrameLoaded(false);
+      lastPreviewUrlRef.current = previewUrl;
     }
-  }
+  }, [frameLoaded, previewUrl]);
 
   /**
    * Update state to indicate that the preview page has completed loading
    *
    * @param {boolean} loaded
    */
-  setFrameLoaded(loaded = true) {
-    this.setState({ frameLoaded: loaded });
-  }
+  const setFrameLoadedState = (loaded = true) => {
+    setFrameLoaded(loaded);
+  };
 
-  handleBackClick(event) {
-    if (typeof this.props.onBack === 'function') {
+  // eslint-disable-next-line no-unused-vars
+  const handleBackClick = (event) => {
+    if (typeof onBack === 'function') {
       event.preventDefault();
-      this.props.onBack(event);
+      onBack(event);
     }
-  }
+  };
 
   /**
    * Returns list of toolbar buttons
    *
    * @return {Array}
    */
-  buildToolbarButtons() {
+  const buildToolbarButtons = () => {
     const toolbarButtons = [];
-    if (this.props.itemLinks && this.props.itemLinks.edit) {
-      const editUrl = this.props.itemLinks.edit.href;
+    if (itemLinks && itemLinks.edit) {
+      const editUrl = itemLinks.edit.href;
       toolbarButtons.push(
         <a key="edit" href={editUrl} className="btn btn-outline-secondary">
           <span className="font-icon-edit btn__icon" aria-hidden="true" />
@@ -64,36 +76,22 @@ class Preview extends Component {
       );
     }
     return toolbarButtons;
-  }
+  };
 
-  renderMoreActions() {
-    if (!this.props.moreActions || this.props.moreActions.length === 0) {
+  const renderMoreActions = () => {
+    if (!moreActions || moreActions.length === 0) {
       return null;
     }
     return (
       <ActionMenu>
-        {this.props.moreActions}
+        {moreActions}
       </ActionMenu>
     );
-  }
+  };
 
-  renderBody() {
-    let previewUrl = null;
-    let previewType = '';
-
-    // Find preview url
-    if (this.props.itemLinks && this.props.itemLinks.preview) {
-      if (this.props.itemLinks.preview.Stage) {
-        previewUrl = this.props.itemLinks.preview.Stage.href;
-        previewType = this.props.itemLinks.preview.Stage.type;
-      } else if (this.props.itemLinks.preview.Live) {
-        previewUrl = this.props.itemLinks.preview.Live.href;
-        previewType = this.props.itemLinks.preview.Live.type;
-      }
-    }
-
+  const renderBody = () => {
     // No item available
-    if (!this.props.itemId) {
+    if (!itemId) {
       return (
         <div className="preview__overlay">
           <h3 className="preview__overlay-text">
@@ -125,31 +123,27 @@ class Preview extends Component {
 
     // Show iframe preview
     return (<iframe
-      style={{ visibility: this.state.frameLoaded ? 'visible' : 'hidden' }}
+      style={{ visibility: frameLoaded ? 'visible' : 'hidden' }}
       className="flexbox-area-grow preview__iframe"
       src={previewUrl}
-      onLoad={this.setFrameLoaded}
+      onLoad={setFrameLoadedState}
     />);
-  }
+  };
 
-  render() {
-    const { className, ViewModeComponent } = this.props;
-
-    const classNames = classnames('preview', className);
-    return (
-      <div className={classNames}>
-        {this.renderBody()}
-        <div className="toolbar toolbar--south">
-          <div className="btn-toolbar">
-            {this.buildToolbarButtons()}
-            <ViewModeComponent id="view-mode-toggle-in-preview-nb" area="preview" />
-            {this.renderMoreActions()}
-          </div>
+  const classNameValue = classnames('preview', className);
+  return (
+    <div className={classNameValue}>
+      {renderBody()}
+      <div className="toolbar toolbar--south">
+        <div className="btn-toolbar">
+          {buildToolbarButtons()}
+          <ViewModeComponent id="view-mode-toggle-in-preview-nb" area="preview" />
+          {renderMoreActions()}
         </div>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 Preview.propTypes = {
   className: PropTypes.string,
@@ -158,10 +152,6 @@ Preview.propTypes = {
   onBack: PropTypes.func,
   moreActions: PropTypes.arrayOf(PropTypes.element),
   ViewModeComponent: PropTypes.elementType,
-};
-
-Preview.defaultProps = {
-  className: 'flexbox-area-grow fill-height',
 };
 
 export { Preview as Component };
