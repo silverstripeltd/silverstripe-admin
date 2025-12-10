@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import TagList from 'components/Tag/TagList';
 import ResizeAware from 'components/ResizeAware/ResizeAware';
 import classnames from 'classnames';
@@ -9,41 +9,21 @@ import SummaryTag from './SummaryTag';
  * Extension of TagList that is aware of its size and switch to a summary view if greater than a
  * specific width.
  */
-class CompactTagList extends Component {
-  constructor(props) {
-    super(props);
-
-    this.render = this.render.bind(this);
-    this.onResize = this.onResize.bind(this);
-    this.refreshShowSummaryView = this.refreshShowSummaryView.bind(this);
-    this.getPlaceholderSize = this.getPlaceholderSize.bind(this);
-
-    this.state = {
-      showSummaryView: false
-    };
-  }
-
-  componentDidUpdate() {
-    const placeholderWidth = this.getPlaceholderSize();
-    this.refreshShowSummaryView(placeholderWidth);
-  }
+const CompactTagList = ({
+  maxSize = 0,
+  onSummary = () => {},
+  ...listProps
+}) => {
+  const [showSummaryView, setShowSummaryView] = useState(false);
+  const nodeRef = useRef(null);
 
   /**
-   * Detect resizing of the TagList placeholder and compare it to the max width our component can
-   * occupy. If it's bigger, the summary view is triggered.
-   * @param tagListDimension
-   */
-  onResize(tagListDimension) {
-    this.refreshShowSummaryView(tagListDimension.width);
-  }
-
-  /**
-   * Measure the width of the root node. This will tell us what the maximum size our tag list can
-   * be.
-   * @returns {number}
-   */
-  getPlaceholderSize() {
-    const node = this.nodeRef;
+    * Measure the width of the root node. This will tell us what the maximum size our tag list can
+    * be.
+    * @returns {number}
+    */
+  const getPlaceholderSize = () => {
+    const node = nodeRef.current;
     if (!node) {
       return 0;
     }
@@ -55,54 +35,58 @@ class CompactTagList extends Component {
     }
 
     return 0;
-  }
+  };
 
   /**
-   * Compare placeholderWidth to the max width and decide if we should the showSummaryView state.
-   * @param placeholderWidth
-   */
-  refreshShowSummaryView(placeholderWidth) {
-    const maxWidth = this.props.maxSize;
-    const showSummaryView = maxWidth < placeholderWidth;
+    * Compare placeholderWidth to the max width and decide if we should the showSummaryView state.
+    * @param placeholderWidth
+    */
+  const refreshShowSummaryView = (placeholderWidth) => {
+    const newShowSummaryView = maxSize < placeholderWidth;
 
-    if (this.state.showSummaryView !== showSummaryView) {
-      this.setState(() => ({ showSummaryView }));
+    if (showSummaryView !== newShowSummaryView) {
+      setShowSummaryView(newShowSummaryView);
     }
-  }
+  };
 
-  render() {
-    const { maxSize, onSummary, ...listProps } = this.props;
-    const showSummaryView = this.state.showSummaryView;
-    const count = this.props.tags.length;
-    const classes = classnames(
-      'compact-tag-list',
-      { 'compact-tag-list__show-summary-view': showSummaryView }
-    );
+  /**
+    * Detect resizing of the TagList placeholder and compare it to the max width our component can
+    * occupy. If it's bigger, the summary view is triggered.
+    * @param tagListDimension
+    */
+  const onResize = (tagListDimension) => {
+    refreshShowSummaryView(tagListDimension.width);
+  };
 
-    return (
-      <div className={classes} ref={node => { this.nodeRef = node; }}>
-        <ResizeAware onResize={this.onResize} className="compact-tag-list__placeholder" aria-hidden>
-          <TagList {...listProps} focusable={false} />
-        </ResizeAware>
-        <div className="compact-tag-list__visible">
-          { showSummaryView ?
-            <SummaryTag count={count} onClick={onSummary} onNext={listProps.onHolderFocus} /> :
-            <TagList {...listProps} />
-        }
-        </div>
+  useEffect(() => {
+    const placeholderWidth = getPlaceholderSize();
+    refreshShowSummaryView(placeholderWidth);
+  });
+
+  const count = listProps.tags.length;
+  const classes = classnames(
+    'compact-tag-list',
+    { 'compact-tag-list__show-summary-view': showSummaryView }
+  );
+
+  return (
+    <div className={classes} ref={nodeRef}>
+      <ResizeAware onResize={onResize} className="compact-tag-list__placeholder" aria-hidden>
+        <TagList {...listProps} focusable={false} />
+      </ResizeAware>
+      <div className="compact-tag-list__visible">
+        { showSummaryView ?
+          <SummaryTag count={count} onClick={onSummary} onNext={listProps.onHolderFocus} /> :
+          <TagList {...listProps} />
+      }
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 CompactTagList.propTypes = Object.assign({}, TagList.propTypes, {
   maxSize: PropTypes.number,
   onSummary: PropTypes.func
 });
-
-CompactTagList.defaultProps = {
-  maxSize: 0,
-  onSummary: () => {}
-};
 
 export default CompactTagList;
