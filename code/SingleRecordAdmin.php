@@ -3,6 +3,7 @@
 namespace SilverStripe\Admin;
 
 use SilverStripe\Forms\Form;
+use SilverStripe\Forms\HiddenField;
 use SilverStripe\ORM\DataObject;
 
 /**
@@ -25,6 +26,19 @@ abstract class SingleRecordAdmin extends LeftAndMain
 
     public function getEditForm($id = null, $fields = null): ?Form
     {
+        if (!$fields) {
+            if (!$id) {
+                $id = $this->currentRecordID();
+            }
+            $record = $this->getRecord($id);
+            if ($record) {
+                $fields = $record->getCMSFields();
+            }
+        }
+        if ($fields && !$fields->dataFieldByName('ID')) {
+            $fields->add(HiddenField::create('ID'));
+        }
+
         $form = parent::getEditForm($id, $fields);
         // Keep the tabs on the top row, rather than underneath
         if ($form?->Fields()->hasTabSet()) {
