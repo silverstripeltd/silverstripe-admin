@@ -1,20 +1,34 @@
-import React, { Component } from 'react';
+import React, { useEffect, useRef } from 'react';
 import FormAlert from 'components/FormAlert/FormAlert';
 import PropTypes from 'prop-types';
 
-class Form extends Component {
-  constructor(props) {
-    super(props);
-    this.handleSubmit = this.handleSubmit.bind(this);
-  }
+const Form = ({
+  autoFocus,
+  setDOM = () => null,
+  valid,
+  actions,
+  fieldHolder,
+  actionHolder = {
+    className: 'btn-toolbar'
+  },
+  afterMessages,
+  attributes,
+  fields,
+  handleSubmit,
+  mapActionsToComponents,
+  mapFieldsToComponents,
+  messages,
+  formTag: FormTag = 'form',
+  FormAlertComponent = FormAlert,
+}) => {
+  const formRef = useRef(null);
 
-  componentDidMount() {
-    if (!this.props.autoFocus) {
+  useEffect(() => {
+    if (!autoFocus) {
       return;
     }
-
-    if (this.form) {
-      const input = this.form.querySelector('input:not([type=hidden]), select, textarea');
+    if (formRef.current) {
+      const input = formRef.current.querySelector('input:not([type=hidden]), select, textarea');
       if (input) {
         input.focus();
         if (input.select) {
@@ -22,17 +36,16 @@ class Form extends Component {
         }
       }
     }
-  }
+  }, []);
 
   /**
    * Generates a list of messages if any are available
    *
    * @returns {Array|null}
    */
-  renderMessages() {
-    const { FormAlertComponent } = this.props;
-    if (Array.isArray(this.props.messages)) {
-      return this.props.messages.map((message, index) => (
+  const renderMessages = () => {
+    if (Array.isArray(messages)) {
+      return messages.map((message, index) => (
         <FormAlertComponent
           // eslint-disable-next-line react/no-array-index-key
           key={index}
@@ -42,61 +55,58 @@ class Form extends Component {
       ));
     }
     return null;
-  }
+  };
 
-  handleSubmit(event, ...args) {
+  const handleSubmitForm = (event, ...args) => {
     // Ensure submitting a nested form doesn't submit the parent form
     event.stopPropagation();
     // Pass submission handling up the component stack
-    this.props.handleSubmit(event, ...args);
+    handleSubmit(event, ...args);
+  };
+
+  const validForm = valid !== false;
+  const fieldsContent = mapFieldsToComponents(fields);
+  const actionsContent = mapActionsToComponents(actions);
+  const messagesContent = renderMessages();
+
+  const className = ['form'];
+  if (validForm === false) {
+    className.push('form--invalid');
   }
-
-  render() {
-    const valid = this.props.valid !== false;
-    const fields = this.props.mapFieldsToComponents(this.props.fields);
-    const actions = this.props.mapActionsToComponents(this.props.actions);
-    const messages = this.renderMessages();
-    const FormTag = this.props.formTag;
-
-    const className = ['form'];
-    if (valid === false) {
-      className.push('form--invalid');
-    }
-    if (this.props.attributes && this.props.attributes.className) {
-      className.push(this.props.attributes.className);
-    }
-    const formProps = {
-      ...this.props.attributes,
-      onSubmit: this.handleSubmit,
-      className: className.join(' '),
-    };
-
-    return (
-      <FormTag
-        {...formProps}
-        ref={(form) => { this.form = form; this.props.setDOM(form); }}
-        role="form"
-      >
-        {fields &&
-          <fieldset {...this.props.fieldHolder}>
-            {messages}
-            {this.props.afterMessages}
-
-            {fields}
-          </fieldset>
-        }
-
-        { actions && actions.length
-          ?
-            <div {...this.props.actionHolder}>
-              {actions}
-            </div>
-          : null
-        }
-      </FormTag>
-    );
+  if (attributes && attributes.className) {
+    className.push(attributes.className);
   }
-}
+  const formProps = {
+    ...attributes,
+    onSubmit: handleSubmitForm,
+    className: className.join(' '),
+  };
+
+  return (
+    <FormTag
+      {...formProps}
+      ref={(formEl) => { formRef.current = formEl; setDOM(formEl); }}
+      role="form"
+    >
+      {fieldsContent &&
+        <fieldset {...fieldHolder}>
+          {messagesContent}
+          {afterMessages}
+
+          {fieldsContent}
+        </fieldset>
+      }
+
+      { actionsContent && actionsContent.length
+        ?
+          <div {...actionHolder}>
+            {actionsContent}
+          </div>
+        : null
+      }
+    </FormTag>
+  );
+};
 
 Form.propTypes = {
   autoFocus: PropTypes.bool,
@@ -130,15 +140,6 @@ Form.propTypes = {
   })),
   formTag: PropTypes.oneOfType([PropTypes.func, PropTypes.string]),
   FormAlertComponent: PropTypes.oneOfType([PropTypes.object, PropTypes.func]),
-};
-
-Form.defaultProps = {
-  setDOM: () => null,
-  formTag: 'form',
-  actionHolder: {
-    className: 'btn-toolbar'
-  },
-  FormAlertComponent: FormAlert
 };
 
 export { Form as Component };

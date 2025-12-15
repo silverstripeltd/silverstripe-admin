@@ -1,52 +1,53 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { Modal, ModalHeader, ModalBody } from 'reactstrap';
 import classnames from 'classnames';
 import PropTypes from 'prop-types';
 
-class IframeDialog extends Component {
-  constructor(props) {
-    super(props);
-
-    this.handleClosed = this.handleClosed.bind(this);
-  }
-
-  handleClosed() {
-    if (typeof this.props.onClosed === 'function') {
-      this.props.onClosed();
+const IframeDialog = ({
+  url,
+  onClosed,
+  isOpen = false,
+  title = null,
+  modalClassName,
+  iframeId,
+  iframeClassName,
+  className,
+  bodyClassName,
+}) => {
+  const handleClosed = () => {
+    if (typeof onClosed === 'function') {
+      onClosed();
     }
-  }
+  };
 
-  renderHeader() {
-    const title = this.props.title;
+  const renderHeader = () => {
     if (title) {
       return (
-        <ModalHeader toggle={this.handleClosed}>{title}</ModalHeader>
+        <ModalHeader toggle={handleClosed}>{title}</ModalHeader>
       );
     }
     return null;
-  }
+  };
 
-  render() {
-    return (
-      <Modal
-        isOpen={this.props.isOpen}
-        onClosed={this.handleClosed}
-        className={classnames('iframe-dialog', this.props.className)}
-        modalClassName={this.props.modalClassName}
-      >
-        {this.renderHeader()}
-        <ModalBody className={this.props.bodyClassName}>
-          <iframe
-            id={this.props.iframeId}
-            className={classnames('iframe-dialog__iframe', this.props.iframeClassName)}
-            src={this.props.url}
-            frameBorder={0}
-          />
-        </ModalBody>
-      </Modal>
-    );
-  }
-}
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClosed={handleClosed}
+      className={classnames('iframe-dialog', className)}
+      modalClassName={modalClassName}
+    >
+      {renderHeader()}
+      <ModalBody className={bodyClassName}>
+        <iframe
+          id={iframeId}
+          className={classnames('iframe-dialog__iframe', iframeClassName)}
+          src={url}
+          frameBorder={0}
+        />
+      </ModalBody>
+    </Modal>
+  );
+};
 
 IframeDialog.propTypes = {
   url: PropTypes.string.isRequired,
@@ -58,11 +59,6 @@ IframeDialog.propTypes = {
   iframeClassName: PropTypes.string,
   className: PropTypes.string,
   bodyClassName: PropTypes.string,
-};
-
-IframeDialog.defaultProps = {
-  isOpen: false,
-  title: null,
 };
 
 export default IframeDialog;
