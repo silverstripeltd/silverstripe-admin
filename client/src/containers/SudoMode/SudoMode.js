@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import Config from 'lib/Config';
 import i18n from 'i18n';
@@ -22,35 +22,27 @@ const configSectionKey = 'SilverStripe\\Admin\\SudoModeController';
  * to them via legitimate use paths.
  */
 const withSudoMode = (WrappedComponent) => {
-  class ComponentWithSudoMode extends Component {
-    constructor(props) {
-      super(props);
-
-      this.state = {
-        active: Config.getSection(configSectionKey).sudoModeActive || false,
-      };
-    }
+  const ComponentWithSudoMode = (props) => {
+    const [active, setActive] = useState(
+      Config.getSection(configSectionKey).sudoModeActive || false
+    );
 
     /**
      * Returns whether "sudo mode" is active for the current user.
      *
      * @returns {boolean}
      */
-    isSudoModeActive() {
-      return this.state.active === true;
-    }
+    const isSudoModeActive = () => active === true;
 
-    render() {
-      if (!this.isSudoModeActive()) {
-        return <SudoModePasswordField
-          verifyMessage={i18n._t('Admin.VERIFY_ITS_YOU', 'Verify it\'s you first.')}
-          onSuccess={() => this.setState({ active: true })}
-          autocomplete="off"
-        />; // this.renderSudoMode();
-      }
-      return <WrappedComponent {...this.props} />;
+    if (!isSudoModeActive()) {
+      return <SudoModePasswordField
+        verifyMessage={i18n._t('Admin.VERIFY_ITS_YOU', 'Verify it\'s you first.')}
+        onSuccess={() => setActive(true)}
+        autocomplete="off"
+      />; // this.renderSudoMode();
     }
-  }
+    return <WrappedComponent {...props} />;
+  };
 
   ComponentWithSudoMode.propTypes = {
     LoadingComponent: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
