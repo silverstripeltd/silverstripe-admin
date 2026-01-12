@@ -411,7 +411,7 @@ $.entwine('ss', function($) {
         });
 
       $(document).on('keydown', function(e) {
-        if (e.keyCode === 27) { // Escape key
+        if (e.key === 'Escape') {
           closeModal();
         }
       });
@@ -787,7 +787,7 @@ $.entwine('ss', function($) {
 
   $(".grid-field .pagination-page-number input").entwine({
     onkeydown: function(event) {
-      if(event.keyCode == 13) {
+      if (event.key === 'Enter') {
         event.preventDefault();
         var newpage = parseInt($(this).val(), 10);
 
