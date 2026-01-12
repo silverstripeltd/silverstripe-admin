@@ -468,7 +468,7 @@ class TreeDropdownField extends Component {
     // ignore handling keys if searching
     if (this.hasSearch()) {
       // if escape is pressed, clear the search term
-      if (event.keyCode === 27) {
+      if (event.key === 'Escape') {
         this.handleSearchReset(event);
       }
       // let react-select handle it
@@ -482,11 +482,11 @@ class TreeDropdownField extends Component {
       return;
     }
 
-    switch (event.keyCode) {
-      case 37: // left, go back
+    switch (event.key) {
+      case 'ArrowLeft': // left, go back
         this.handleBack(event);
         break;
-      case 39: // right, drill deeper
+      case 'ArrowRight': // right, drill deeper
         if (focused.count) {
           this.handleNavigate(event, focused.id);
         }

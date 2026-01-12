@@ -4187,6 +4187,34 @@ var keycode = $.ui.keyCode = {
 	UP: 38
 };
 
+var keyToKeyCode = {
+	'Backspace': keycode.BACKSPACE,
+	',': keycode.COMMA,
+	'Delete': keycode.DELETE,
+	'ArrowDown': keycode.DOWN,
+	'End': keycode.END,
+	'Enter': keycode.ENTER,
+	'Escape': keycode.ESCAPE,
+	'Home': keycode.HOME,
+	'ArrowLeft': keycode.LEFT,
+	'PageDown': keycode.PAGE_DOWN,
+	'PageUp': keycode.PAGE_UP,
+	'.': keycode.PERIOD,
+	'ArrowRight': keycode.RIGHT,
+	' ' : keycode.SPACE,
+	'Tab': keycode.TAB,
+	'ArrowUp': keycode.UP
+};
+
+// This was added to support the existing `keyCode` property logic
+// keyCode is deprecated, so we use the `key` property instead
+var getEventKeyCode = function(event) {
+	var key = event.key;
+	if (keyToKeyCode.hasOwnProperty(key)) {
+		return keyToKeyCode[key];
+	}
+	return undefined;
+};
 
 /*!
  * jQuery UI Labels 1.13.2
@@ -4527,7 +4555,7 @@ var widgetsAccordion = $.widget( "ui.accordion", {
 			currentIndex = this.headers.index( event.target ),
 			toFocus = false;
 
-		switch ( event.keyCode ) {
+		switch ( getEventKeyCode(event) ) {
 		case keyCode.RIGHT:
 		case keyCode.DOWN:
 			toFocus = this.headers[ ( currentIndex + 1 ) % length ];
@@ -4557,7 +4585,7 @@ var widgetsAccordion = $.widget( "ui.accordion", {
 	},
 
 	_panelKeyDown: function( event ) {
-		if ( event.keyCode === $.ui.keyCode.UP && event.ctrlKey ) {
+		if ( getEventKeyCode(event) === $.ui.keyCode.UP && event.ctrlKey ) {
 			$( event.currentTarget ).prev().trigger( "focus" );
 		}
 	},
@@ -5175,7 +5203,7 @@ var widgetsMenu = $.widget( "ui.menu", {
 		var match, prev, character, skip,
 			preventDefault = true;
 
-		switch ( event.keyCode ) {
+		switch ( getEventKeyCode(event) ) {
 		case $.ui.keyCode.PAGE_UP:
 			this.previousPage( event );
 			break;
@@ -5215,8 +5243,8 @@ var widgetsMenu = $.widget( "ui.menu", {
 			skip = false;
 
 			// Support number pad values
-			character = event.keyCode >= 96 && event.keyCode <= 105 ?
-				( event.keyCode - 96 ).toString() : String.fromCharCode( event.keyCode );
+			character = getEventKeyCode(event) >= 96 && getEventKeyCode(event) <= 105 ?
+				( getEventKeyCode(event) - 96 ).toString() : String.fromCharCode( getEventKeyCode(event) );
 
 			clearTimeout( this.filterTimer );
 
@@ -5234,7 +5262,7 @@ var widgetsMenu = $.widget( "ui.menu", {
 			// If no matches on the current filter, reset to the last character pressed
 			// to move down the menu to the first item that starts with that character
 			if ( !match.length ) {
-				character = String.fromCharCode( event.keyCode );
+				character = String.fromCharCode( getEventKeyCode(event) );
 				match = this._filterMenuItems( character );
 			}
 
@@ -5749,7 +5777,7 @@ $.widget( "ui.autocomplete", {
 				suppressInput = false;
 				suppressKeyPressRepeat = false;
 				var keyCode = $.ui.keyCode;
-				switch ( event.keyCode ) {
+				switch ( getEventKeyCode(event) ) {
 				case keyCode.PAGE_UP:
 					suppressKeyPress = true;
 					this._move( "previousPage", event );
@@ -5818,7 +5846,7 @@ $.widget( "ui.autocomplete", {
 
 				// Replicate some key handlers to allow them to repeat in Firefox and Opera
 				var keyCode = $.ui.keyCode;
-				switch ( event.keyCode ) {
+				switch ( getEventKeyCode(event) ) {
 				case keyCode.PAGE_UP:
 					this._move( "previousPage", event );
 					break;
@@ -6958,7 +6986,7 @@ $.widget( "ui.button", {
 		if ( this.element.is( "a" ) ) {
 			this._on( {
 				"keyup": function( event ) {
-					if ( event.keyCode === $.ui.keyCode.SPACE ) {
+					if ( getEventKeyCode(event) === $.ui.keyCode.SPACE ) {
 						event.preventDefault();
 
 						// Support: PhantomJS <= 1.9, IE 8 Only
@@ -7929,7 +7957,7 @@ $.extend( Datepicker.prototype, {
 
 		inst._keyEvent = true;
 		if ( $.datepicker._datepickerShowing ) {
-			switch ( event.keyCode ) {
+			switch ( getEventKeyCode(event) ) {
 				case 9: $.datepicker._hideDatepicker();
 						handled = false;
 						break; // hide on tab out
@@ -8010,7 +8038,7 @@ $.extend( Datepicker.prototype, {
 						break; // +1 week on ctrl or command +down
 				default: handled = false;
 			}
-		} else if ( event.keyCode === 36 && event.ctrlKey ) { // display the date picker on ctrl+home
+		} else if ( getEventKeyCode(event) === 36 && event.ctrlKey ) { // display the date picker on ctrl+home
 			$.datepicker._showDatepicker( this );
 		} else {
 			handled = false;
@@ -8029,7 +8057,7 @@ $.extend( Datepicker.prototype, {
 
 		if ( $.datepicker._get( inst, "constrainInput" ) ) {
 			chars = $.datepicker._possibleChars( $.datepicker._get( inst, "dateFormat" ) );
-			chr = String.fromCharCode( event.charCode == null ? event.keyCode : event.charCode );
+			chr = String.fromCharCode( event.charCode == null ? getEventKeyCode(event) : event.charCode );
 			return event.ctrlKey || event.metaKey || ( chr < " " || !chars || chars.indexOf( chr ) > -1 );
 		}
 	},
@@ -9598,7 +9626,7 @@ var widgetsMouse = $.widget( "ui.mouse", {
 		this._mouseDownEvent = event;
 
 		var that = this,
-			btnIsLeft = ( event.which === 1 ),
+			btnIsLeft = event.button === 0,
 
 			// event.target.nodeName works around a bug in IE 8 with
 			// disabled inputs (#7620)
@@ -9660,7 +9688,7 @@ var widgetsMouse = $.widget( "ui.mouse", {
 				return this._mouseUp( event );
 
 			// Iframe mouseup check - mouseup occurred in another document
-			} else if ( !event.which ) {
+			} else if (event.buttons === 0) {
 
 				// Support: Safari <=8 - 9
 				// Safari sets which to 0 if you press any of the following keys
@@ -9674,7 +9702,7 @@ var widgetsMouse = $.widget( "ui.mouse", {
 			}
 		}
 
-		if ( event.which || event.button ) {
+		if (event.buttons !== 0) {
 			this._mouseMoved = true;
 		}
 
@@ -12554,15 +12582,15 @@ $.widget( "ui.dialog", {
 		this._addClass( this.uiDialog, "ui-dialog", "ui-widget ui-widget-content ui-front" );
 		this._on( this.uiDialog, {
 			keydown: function( event ) {
-				if ( this.options.closeOnEscape && !event.isDefaultPrevented() && event.keyCode &&
-						event.keyCode === $.ui.keyCode.ESCAPE ) {
+				if ( this.options.closeOnEscape && !event.isDefaultPrevented() &&
+						getEventKeyCode(event) === $.ui.keyCode.ESCAPE ) {
 					event.preventDefault();
 					this.close( event );
 					return;
 				}
 
 				// Prevent tabbing out of dialogs
-				if ( event.keyCode !== $.ui.keyCode.TAB || event.isDefaultPrevented() ) {
+				if ( getEventKeyCode(event) !== $.ui.keyCode.TAB || event.isDefaultPrevented() ) {
 					return;
 				}
 				var tabbables = this.uiDialog.find( ":tabbable" ),
@@ -14524,7 +14552,7 @@ var widgetsSelectmenu = $.widget( "ui.selectmenu", [ $.ui.formResetMixin, {
 
 		keydown: function( event ) {
 			var preventDefault = true;
-			switch ( event.keyCode ) {
+			switch ( getEventKeyCode(event) ) {
 			case $.ui.keyCode.TAB:
 			case $.ui.keyCode.ESCAPE:
 				this.close( event );
@@ -15416,7 +15444,7 @@ var widgetsSlider = $.widget( "ui.slider", $.ui.mouse, {
 			var allowed, curVal, newVal, step,
 				index = $( event.target ).data( "ui-slider-handle-index" );
 
-			switch ( event.keyCode ) {
+			switch ( getEventKeyCode(event) ) {
 				case $.ui.keyCode.HOME:
 				case $.ui.keyCode.END:
 				case $.ui.keyCode.PAGE_UP:
@@ -15444,7 +15472,7 @@ var widgetsSlider = $.widget( "ui.slider", $.ui.mouse, {
 				curVal = newVal = this.value();
 			}
 
-			switch ( event.keyCode ) {
+			switch ( getEventKeyCode(event) ) {
 				case $.ui.keyCode.HOME:
 					newVal = this._valueMin();
 					break;
@@ -17353,7 +17381,7 @@ $.widget( "ui.spinner", {
 		var options = this.options,
 			keyCode = $.ui.keyCode;
 
-		switch ( event.keyCode ) {
+		switch ( getEventKeyCode(event) ) {
 		case keyCode.UP:
 			this._repeat( null, 1, event );
 			return true;
@@ -17806,7 +17834,7 @@ $.widget( "ui.tabs", {
 			return;
 		}
 
-		switch ( event.keyCode ) {
+		switch ( getEventKeyCode(event) ) {
 		case $.ui.keyCode.RIGHT:
 		case $.ui.keyCode.DOWN:
 			selectedIndex++;
@@ -17868,7 +17896,7 @@ $.widget( "ui.tabs", {
 		}
 
 		// Ctrl+up moves focus to the current tab
-		if ( event.ctrlKey && event.keyCode === $.ui.keyCode.UP ) {
+		if ( event.ctrlKey && getEventKeyCode(event) === $.ui.keyCode.UP ) {
 			event.preventDefault();
 			this.active.trigger( "focus" );
 		}
@@ -17876,11 +17904,11 @@ $.widget( "ui.tabs", {
 
 	// Alt+page up/down moves focus to the previous/next tab (and activates)
 	_handlePageNav: function( event ) {
-		if ( event.altKey && event.keyCode === $.ui.keyCode.PAGE_UP ) {
+		if ( event.altKey && getEventKeyCode(event) === $.ui.keyCode.PAGE_UP ) {
 			this._activate( this._focusNextTab( this.options.active - 1, false ) );
 			return true;
 		}
-		if ( event.altKey && event.keyCode === $.ui.keyCode.PAGE_DOWN ) {
+		if ( event.altKey && getEventKeyCode(event) === $.ui.keyCode.PAGE_DOWN ) {
 			this._activate( this._focusNextTab( this.options.active + 1, true ) );
 			return true;
 		}
@@ -18871,7 +18899,7 @@ $.widget( "ui.tooltip", {
 	_registerCloseHandlers: function( event, target ) {
 		var events = {
 			keyup: function( event ) {
-				if ( event.keyCode === $.ui.keyCode.ESCAPE ) {
+				if ( getEventKeyCode(event) === $.ui.keyCode.ESCAPE ) {
 					var fakeEvent = $.Event( event );
 					fakeEvent.currentTarget = target[ 0 ];
 					this.close( fakeEvent, true );

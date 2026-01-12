@@ -1670,9 +1670,10 @@ Sizzle is good for finding elements for a selector, but not so good for telling 
 					// Change has to be called before submit
 					// Keydown will be called before keypress, which is used in submit-event delegation
 					case 'keydown':
+						var key = e.key;
 						if (
-							(e.keyCode === 13 && !jQuery.nodeName( elem, "textarea" ) ) ||
-							(e.keyCode === 32 && (type === "checkbox" || type === "radio")) ||
+							(key === "Enter" && !jQuery.nodeName( elem, "textarea" )) ||
+							(key === " " && (type === "checkbox" || type === "radio")) ||
 							type === "select-multiple"
 						) {
 							testChange.apply(this, arguments);

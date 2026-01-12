@@ -1307,16 +1307,16 @@
 							obj.css("position","");
 						}.bind(this),
 						"keyup" : function (event) {
-							var key = event.keyCode || event.which;
-							if(key == 27) { this.value = t; this.blur(); return; }
-							else if(key == 13) { this.blur(); return; }
+							var key = event.key;
+							if(key === "Escape") { this.value = t; this.blur(); return; }
+							else if(key === "Enter") { this.blur(); return; }
 							else {
 								h2.width(Math.min(h1.text("pW" + this.value).width(),w));
 							}
 						},
 						"keypress" : function(event) {
-							var key = event.keyCode || event.which;
-							if(key == 13) { return false; }
+							var key = event.key;
+							if(key === "Enter") { return false; }
 						}
 					})
 				).children(".jstree-rename-input");
@@ -2399,7 +2399,7 @@
 						}
 					}.bind(this))
 				.on("mousedown.jstree", "a", function (e) { 
-						if(e.which === 1) {
+						if(e.button === 0) {
 							this.start_drag(e.currentTarget, e);
 							return false;
 						}

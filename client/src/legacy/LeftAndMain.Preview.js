@@ -584,7 +584,7 @@ $.entwine('ss.preview', function($){
      */
     onclick: function(e) {
       //only intercept left click, so middle click can open new windows
-      if (e.which == 1) {
+      if (e.button === 0) {
         var targetStateName = $(this).attr('data-name');
 
         //Add and remove classes to make switch work ok in old IE

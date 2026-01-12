@@ -208,7 +208,7 @@ test('TreeDropdownField should clear search on reset', async () => {
   );
   const input = container.querySelector('.treedropdownfield__value-container input');
   // arrow down will trigger search reset
-  fireEvent.keyDown(input, { key: 'ArrowDown', keyCode: 40 });
+  fireEvent.keyDown(input, { key: 'ArrowDown' });
   // ensure that 500 TreeDropdownField::SEARCH_DELAY is exceeded
   act(() => jest.runAllTimers());
   await promise;
@@ -248,7 +248,7 @@ test('TreeDropdownField should set search after a delay', async () => {
   );
   const input = container.querySelector('.treedropdownfield__value-container input');
   fireEvent.focus(input);
-  fireEvent.keyDown(input, { key: 'ArrowDown', keyCode: 40 });
+  fireEvent.keyDown(input, { key: 'ArrowDown' });
   act(() => jest.runAllTimers());
   await promise;
   expect(setSearch).toBeCalledWith('Form_Test', '');
@@ -273,8 +273,8 @@ test('TreeDropdownField handleChange() single-select should return the id for th
   );
   const input = container.querySelector('.treedropdownfield__value-container input');
   fireEvent.focus(input);
-  fireEvent.keyDown(input, { key: 'ArrowDown', keyCode: 40 });
-  fireEvent.keyDown(input, { key: 'Enter', keyCode: 13 });
+  fireEvent.keyDown(input, { key: 'ArrowDown' });
+  fireEvent.keyDown(input, { key: 'Enter' });
   expect(onChange).toHaveBeenCalledWith(27);
   expect(addSelectedValues).toHaveBeenCalledWith(
     'Form_Test', [{
@@ -305,12 +305,12 @@ test('TreeDropdownField handleChange() multi-select should return an array of id
   );
   const input = container.querySelector('.treedropdownfield__value-container input');
   fireEvent.focus(input);
-  fireEvent.keyDown(input, { key: 'ArrowDown', keyCode: 40 });
-  fireEvent.keyDown(input, { key: 'Enter', keyCode: 13 });
+  fireEvent.keyDown(input, { key: 'ArrowDown' });
+  fireEvent.keyDown(input, { key: 'Enter' });
   fireEvent.focus(input);
-  fireEvent.keyDown(input, { key: 'ArrowDown', keyCode: 40 });
-  fireEvent.keyDown(input, { key: 'ArrowDown', keyCode: 40 });
-  fireEvent.keyDown(input, { key: 'Enter', keyCode: 13 });
+  fireEvent.keyDown(input, { key: 'ArrowDown' });
+  fireEvent.keyDown(input, { key: 'ArrowDown' });
+  fireEvent.keyDown(input, { key: 'Enter' });
   expect(onChange).toHaveBeenNthCalledWith(1, 27);
   expect(onChange).toHaveBeenNthCalledWith(2, 15);
   expect(addSelectedValues).toHaveBeenNthCalledWith(1, 'Form_Test', [{
@@ -349,7 +349,7 @@ test('TreeDropdownField getBreadcrumb() should traverse the path given and retur
   );
   const input = container.querySelector('.treedropdownfield__value-container input');
   fireEvent.focus(input);
-  fireEvent.keyDown(input, { key: 'ArrowDown', keyCode: 40 });
+  fireEvent.keyDown(input, { key: 'ArrowDown' });
   expect(container.querySelector('.treedropdownfield__breadcrumbs-crumbs').textContent).toBe('page five / page nine / page twenty-six');
 });
 
@@ -362,7 +362,7 @@ test('TreeDropdownField getBreadcrumb() should traverse and terminate early if u
   );
   const input = container.querySelector('.treedropdownfield__value-container input');
   fireEvent.focus(input);
-  fireEvent.keyDown(input, { key: 'ArrowDown', keyCode: 40 });
+  fireEvent.keyDown(input, { key: 'ArrowDown' });
   expect(container.querySelector('.treedropdownfield__breadcrumbs-crumbs').textContent).toBe('page five');
 });
 
@@ -382,9 +382,9 @@ test('TreeDropdownField handleBack() should go up one level in the path', () => 
   );
   const input = container.querySelector('.treedropdownfield__value-container input');
   fireEvent.focus(input);
-  fireEvent.keyDown(input, { key: 'ArrowDown', keyCode: 40 });
-  fireEvent.keyDown(input, { key: 'ArrowRight', keyCode: 39 });
-  fireEvent.keyDown(input, { key: 'ArrowLeft', keyCode: 37 });
+  fireEvent.keyDown(input, { key: 'ArrowDown' });
+  fireEvent.keyDown(input, { key: 'ArrowRight' });
+  fireEvent.keyDown(input, { key: 'ArrowLeft' });
   expect(setVisible).toHaveBeenNthCalledWith(1, 'Form_Test', [5]);
   expect(setVisible).toHaveBeenNthCalledWith(2, 'Form_Test', []);
 });

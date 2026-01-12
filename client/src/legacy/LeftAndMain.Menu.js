@@ -195,7 +195,7 @@ $.entwine('ss', function($){
       // Only catch left clicks, in order to allow opening in tabs.
       // Ignore external links, fallback to standard link behaviour
       var isExternal = $.path.isExternal(this.attr('href'));
-      if(e.which > 1 || isExternal) return;
+      if (e.button !== 0 || isExternal) return;
 
       // if the developer has this to open in a new window, handle
       // that
