@@ -78,7 +78,7 @@ const Search = (_props) => {
     addFilterPrefix
   };
 
-  const nodeRef = useRef(null);
+  const containerRef = useRef(null);
 
   const termInit = term
     || (filters && filters[`${filterPrefix}${name}`])
@@ -180,12 +180,12 @@ const Search = (_props) => {
       return;
     }
 
-    const node = nodeRef.current.container;
-    if (!node) {
+    const container = containerRef.current;
+    if (!container) {
       return;
     }
 
-    const input = node.querySelector('.search-box__content-field');
+    const input = container.querySelector('.search-box__content-field');
     // check that it doesn't already have focus
     if (input !== document.activeElement) {
       input.focus();
@@ -203,12 +203,12 @@ const Search = (_props) => {
       return;
     }
 
-    const node = nodeRef.current.container;
-    if (!node) {
+    const container = containerRef.current;
+    if (!container) {
       return;
     }
 
-    const form = node.querySelector('.search-form');
+    const form = container.querySelector('.search-form');
     if (!form) {
       return;
     }
@@ -364,7 +364,7 @@ const Search = (_props) => {
     // It's important that we only call show() when a relevent element is clicked, otherwise we'll
     // end up making lots of unnecessary AJAX requests to the form schema endpoint
     const buttonEl = evt.target;
-    const $componentEl = window.jQuery(nodeRef.current.container);
+    const $componentEl = window.jQuery(containerRef.current);
     const filterButtonClicked = buttonEl.matches('#filters-button, .font-icon-search, .filter-open');
     // The visibility check is needed to avoid loading the form for hidden tabs (e.g. in ModelAdmin)
     if (filterButtonClicked && $componentEl.is(':visible')) {
@@ -440,6 +440,11 @@ const Search = (_props) => {
     return (<div />);
   }
 
+  // Used to get the container element from Focusedzone
+  const passBackContainer = (container) => {
+    containerRef.current = container;
+  };
+
   useEffect(() => {
     // Set overrides on mount
     setOverrides(props);
@@ -462,7 +467,7 @@ const Search = (_props) => {
   const clearable = (Object.keys(data).length > 0);
 
   return (
-    <Focusedzone onClickOut={onClickOut} className="search" ref={nodeRef}>
+    <Focusedzone onClickOut={onClickOut} className="search" passBackContainer={passBackContainer}>
       <SearchBox
         {...props}
         name={`SearchBox__${name}`}

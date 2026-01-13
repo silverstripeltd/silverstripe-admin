@@ -1,116 +1,132 @@
-import { createElement, Component, Children,
-  cloneElement, isValidElement } from 'react';
+import {
+  createElement,
+  Children,
+  cloneElement,
+  isValidElement,
+  useState,
+  useRef,
+  useCallback,
+  useEffect
+} from 'react';
 import ResizeObserver from 'resize-observer-polyfill';
 import PropTypes from 'prop-types';
 
 /**
  * Can be wrapped around a component to detect dimension changes.
- *
- * Adapted from https://github.com/FezVrasta/react-resize-aware created by Federico Zivolo.
  */
-class ResizeAware extends Component {
-  constructor(props) {
-    super(props);
+const ResizeAware = ({
+  children,
+  onlyEvent,
+  component = 'div',
+  onResize,
+  widthPropName = 'width',
+  heightPropName = 'height',
+  ...props
+}) => {
+  // Consolidate size into a single state object to prevent double re-renders
+  const [sizes, setSizes] = useState({ width: undefined, height: undefined });
 
-    this.render = this.render.bind(this);
-    this.handleResize = this.handleResize.bind(this);
+  // Keep the latest onResize prop in a ref.
+  // This allows the Observer callback to access the latest function
+  // without needing to restart the observer when the prop changes.
+  const onResizeRef = useRef(onResize);
 
-    this.state = { };
+  // Update the ref whenever the prop changes
+  useEffect(() => {
+    onResizeRef.current = onResize;
+  }, [onResize]);
 
-    // Initialise Resize Observer
-    this.observer = new ResizeObserver(
-      entries => entries.forEach(
-        ({ contentRect }) => this.handleResize(contentRect)
+  // Store the observer instance so we can clean it up
+  const observerRef = useRef(null);
+
+  // Shared resize handler
+  const handleResize = useCallback((newSizes) => {
+    setSizes((prevSizes) => {
+      if (
+        prevSizes.width === newSizes.width &&
+        prevSizes.height === newSizes.height
+      ) {
+        // Bail out if dimensions haven't changed
+        return prevSizes;
+      }
+      return { width: newSizes.width, height: newSizes.height };
+    });
+
+    if (onResizeRef.current) {
+      onResizeRef.current(newSizes);
+    }
+  }, []);
+
+  // Use a Callback Ref to manage the node and the observer.
+  // This is safer than useEffect because it reacts immediately when the DOM node exists.
+  const handleNode = useCallback((node) => {
+    // Cleanup previous observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
+    }
+
+    if (node) {
+      // Create a new observer
+      observerRef.current = new ResizeObserver((entries) => {
+        entries.forEach((entry) => {
+          const { width, height } = entry.contentRect;
+          handleResize({ width, height });
+        });
+      });
+
+      // Observe the element
+      observerRef.current.observe(node);
+
+      // Trigger initial sizing event (mimicking componentDidMount from original)
+      const initialSizes = {
+        width: node.offsetWidth,
+        height: node.offsetHeight,
+      };
+      handleResize(initialSizes);
+    }
+  }, [handleResize]);
+
+  // Cleanup on unmount (failsafe)
+  useEffect(() => () => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+  }, []);
+
+  const hasCustomComponent = typeof component !== 'string';
+  const widthProp = widthPropName;
+  const heightProp = heightPropName;
+
+  const childSizes = {
+    [widthProp]: sizes.width,
+    [heightProp]: sizes.height,
+  };
+
+  return createElement(
+    component,
+    {
+      // If it's a custom component, we assume it accepts a prop (getRef)
+      // If it's a string ('div'), we use the standard 'ref'
+      [hasCustomComponent ? 'getRef' : 'ref']: handleNode,
+      ...(hasCustomComponent && childSizes),
+      ...props,
+    },
+    typeof children === 'function'
+      ? children({ width: sizes.width, height: sizes.height })
+      : Children.map(children, (child) =>
+        (isValidElement(child)
+          ? cloneElement(child, !onlyEvent ? childSizes : null)
+          : child)
       )
-    );
-  }
-
-  componentDidMount() {
-    // Wire the container to the Resize Observer
-    this.observer.observe(this.container);
-
-    // Trigger an initial sizing event
-    const sizes = {
-      width: this.container.offsetWidth,
-      height: this.container.offsetHeight,
-    };
-    this.handleResize(sizes);
-  }
-
-  componentWillUnmount() {
-    this.observer.disconnect();
-  }
-
-  /**
-   * Handler for the resize events.
-   *
-   * @note ResizeObserver measure other dimensions aside from height and width,
-   * but we don't care about those.
-   * @param sizes
-   */
-  handleResize(sizes) {
-    const { width, height } = this.state;
-    if (width !== sizes.width || height !== sizes.height) {
-      this.setState(sizes);
-    }
-
-    if (this.props.onResize) {
-      this.props.onResize(sizes);
-    }
-  }
-
-  /**
-   * Render the component
-   */
-  render() {
-    const {
-      children,
-      onlyEvent,
-      component,
-      onResize,
-      widthPropName,
-      heightPropName,
-      ...props
-    } = this.props;
-    const { width, height } = this.state;
-
-    const hasCustomComponent = typeof component !== 'string';
-
-    const widthProp = [widthPropName || 'width'];
-    const heightProp = [heightPropName || 'height'];
-
-    const sizes = {
-      [widthProp]: width,
-      [heightProp]: height,
-    };
-
-    return createElement(
-      component,
-      {
-        [hasCustomComponent ? 'getRef' : 'ref']: el => { this.container = el; },
-        ...(hasCustomComponent && sizes),
-        ...props,
-      },
-      typeof children === 'function'
-        ? children({ width, height })
-        : Children.map(
-          children,
-          child =>
-            (isValidElement(child)
-              ? cloneElement(child, !onlyEvent ? sizes : null)
-              : child)
-        )
-    );
-  }
-}
+  );
+};
 
 ResizeAware.propTypes = {
   component: PropTypes.oneOfType([PropTypes.string, PropTypes.elementType]),
-  onResize: PropTypes.func
-};
-
-ResizeAware.defaultProps = {
-  component: 'div'
+  onResize: PropTypes.func,
+  widthPropName: PropTypes.string,
+  heightPropName: PropTypes.string,
 };
 
 export default ResizeAware;
