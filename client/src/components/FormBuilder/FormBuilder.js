@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import merge from 'merge';
 import schemaFieldValues, { schemaMerge } from 'lib/schemaFieldValues';
@@ -6,209 +6,254 @@ import { createErrorBlock } from 'lib/createErrorBlock';
 import backend from 'lib/Backend';
 import { withInjector } from 'lib/Injector';
 
-class FormBuilder extends Component {
-  constructor(props) {
-    super(props);
-    const schemaStructure = props.schema.schema;
-    this.state = { submittingAction: null };
-    this.submitApi = backend.createEndpointFetcher({
-      url: schemaStructure.attributes.action,
-      method: schemaStructure.attributes.method,
-    });
-    this.mapActionsToComponents = this.mapActionsToComponents.bind(this);
-    this.mapFieldsToComponents = this.mapFieldsToComponents.bind(this);
-    this.normalizeFields = this.normalizeFields.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleAction = this.handleAction.bind(this);
-    this.buildComponent = this.buildComponent.bind(this);
-    this.validateForm = this.validateForm.bind(this);
+/**
+ * If there is structural and state data available merge those data for each field.
+ * Otherwise just use the structural data. Ensure that keys don't conflict
+ * with redux-form expectations.
+ *
+ * @param {array} fields
+ * @param {Object} state Optional
+ * @return {array}
+ */
+const normalizeFields = (fields, state) => fields.map((field) => {
+  const fieldState = (state && state.fields)
+    ? state.fields.find((item) => item.id === field.id)
+    : {};
+  const data = merge.recursive(
+    true,
+    schemaMerge(field, fieldState),
+    {
+      schemaComponent: (fieldState && fieldState.component)
+        ? fieldState.component
+        : field.component,
+    }
+  );
+  if (field.children) {
+    data.children = normalizeFields(field.children, state);
   }
+  return data;
+});
 
-  getComponent({ name, schemaComponent, schemaType }) {
-    const { identifier, getCustomFields } = this.props;
+const FormBuilder = (props, context) => {
+  const {
+    schema,
+    baseFormComponent: BaseFormComponent,
+    form,
+    afterMessages,
+    asyncValidate,
+    fieldHolder,
+    actionHolder,
+    onAction,
+    onAutofill,
+    onSubmit,
+    onSubmitFail,
+    onSubmitSuccess,
+    shouldAsyncValidate,
+    touchOnBlur,
+    touchOnChange,
+    persistentSubmitErrors,
+    autoFocus = false,
+    responseRequestedSchema = ['auto'],
+    formTag,
+    submitting,
+    identifier,
+    validate,
+    values,
+  } = props;
 
-    if (getCustomFields) {
-      const component = getCustomFields(schemaType, `${identifier}.${name}`);
-      if (component) {
-        return component;
-      }
-    }
+  // Store the latest props and context in a ref.
+  // This allows our the "stable methods" to always see the current data
+  // without needing to be recreated.
+  const latestRef = useRef({ props, context });
 
-    if (schemaComponent !== null) {
-      return this.context.injector.get(schemaComponent, `${identifier}.${name}`);
-    }
+  // Update immediately for the current render cycle
+  latestRef.current = { props, context };
 
-    return this.getComponentForDataType(schemaType, name);
-  }
+  // Update the ref on every render so methods can access fresh data
+  useEffect(() => {
+    latestRef.current = { props, context };
+  });
 
-  /**
-   * Default data type to component mappings.
-   * Used as a fallback when no component type is provided in the form schema.
-   *
-   * @param {string} dataType - The data type provided by the form schema.
-   * @param {string} name - name of the field component
-   * @return object|null
-   */
-  getComponentForDataType(dataType, name) {
-    const { identifier } = this.props;
-    const get = (type) => this.context.injector.get(type, `${identifier}.${name}`);
+  const [submittingAction, setSubmittingAction] = useState(null);
+  const formDOMRef = useRef(null);
+  const schemaStructure = schema.schema;
 
-    switch (dataType) {
-      case 'Integer':
-      case 'Decimal':
-        return get('NumberField');
-      case 'String':
-      case 'Text':
-        return get('TextField');
-      case 'Date':
-        return get('DateField');
-      case 'Time':
-        return get('TimeField');
-      case 'Datetime':
-        return get('DatetimeField');
-      case 'Hidden':
-        return get('HiddenField');
-      case 'SingleSelect':
-        return get('SingleSelectField');
-      case 'Custom':
-        return get('GridField');
-      case 'Structural':
-        return get('CompositeField');
-      case 'Boolean':
-        return get('CheckboxField');
-      case 'MultiSelect':
-        return get('CheckboxSetField');
-      default:
-        return null;
-    }
-  }
+  // Stable API fetcher
+  const submitApi = useRef(backend.createEndpointFetcher({
+    url: schemaStructure.attributes.action,
+    method: schemaStructure.attributes.method,
+  })).current;
 
-  /**
-   * Run validation for every field on the form and return an object which list issues while
-   * validating
-   *
-   * @param values
-   * @returns {*}
-   */
-  validateForm(values) {
-    if (typeof this.props.validate === 'function') {
-      return this.props.validate(values);
-    }
-
-    const schema = this.props.schema && this.props.schema.schema;
-    if (!schema) {
-      return {};
-    }
-
-    const validationMiddleware = this.context.injector.validate(
-      this.props.identifier
-    );
-
-    let middlewareValidationResult = {};
-    if (validationMiddleware) {
-      middlewareValidationResult = validationMiddleware(
-        values,
-        this.props.schema.schema
-      ) || {};
-    }
-
-    return createErrorBlock(middlewareValidationResult);
-  }
-
-  /**
-   * Common functionality for building a Field or Action from schema.
-   *
-   * @param {Object} props Props which every form field receives. Leave it up to the
-   *        schema and component to determine which props are required.
-   * @returns {*}
-   */
-  buildComponent(props) {
-    // Inline `input` props into main field props
-    // (each component can pick and choose the props required for it's <input>
-    // See http://redux-form.com/6.0.5/docs/api/Field.md/#input-props
-    const inputProps = props.input || {};
-    const componentProps = {
-      ...props,
-      ...props.input,
-      onChange: inputProps.onChange
-        ? (event, payload) => {
-          inputProps.onChange(payload ? payload.value : event);
-        }
-        : null,
+  // Create "stable methods" for redux-form that have a stable identity
+  // useMemo and empty dependency array [] is used so that these functions are only created once
+  // This is done to ensure these methods have a stable identify so that redux-form (<BaseFormComponent>)
+  // does cause re-renders when these methods change.
+  const methods = useMemo(() => {
+    // Internal helper to access current scope
+    const getScope = () => {
+      const { props: scopeProps, context: scopeContext } = latestRef.current;
+      return {
+        props: scopeProps,
+        injector: scopeContext.injector,
+        identifier: scopeProps.identifier
+      };
     };
-    delete componentProps.input;
 
-    // 'component' key is renamed to 'schemaComponent' in normalize*() methods
-    const SchemaComponent = this.getComponent(componentProps);
+    /**
+     * Default data type to component mappings.
+     * Used as a fallback when no component type is provided in the form schema.
+     *
+     * @param {string} dataType - The data type provided by the form schema.
+     * @param {string} name - name of the field component
+     * @return object|null
+     */
+    const getComponentForDataType = (dataType, name) => {
+      const { injector, identifier: scopeIdentifier } = getScope();
+      const get = (type) => injector.get(type, `${scopeIdentifier}.${name}`);
 
-    if (SchemaComponent === null) {
-      return null;
-    } else if (componentProps.schemaComponent !== null && SchemaComponent === undefined) {
-      throw Error(`Component not found in injector: ${componentProps.schemaComponent}`);
-    }
+      switch (dataType) {
+        case 'Integer':
+        case 'Decimal':
+          return get('NumberField');
+        case 'String':
+        case 'Text':
+          return get('TextField');
+        case 'Date':
+          return get('DateField');
+        case 'Time':
+          return get('TimeField');
+        case 'Datetime':
+          return get('DatetimeField');
+        case 'Hidden':
+          return get('HiddenField');
+        case 'SingleSelect':
+          return get('SingleSelectField');
+        case 'Custom':
+          return get('GridField');
+        case 'Structural':
+          return get('CompositeField');
+        case 'Boolean':
+          return get('CheckboxField');
+        case 'MultiSelect':
+          return get('CheckboxSetField');
+        default:
+          return null;
+      }
+    };
 
-    // Provides container components a place to hook in
-    // and apply customisations to scaffolded components.
-    const createFn = this.props.createFn;
-    if (typeof createFn === 'function') {
-      return createFn(SchemaComponent, componentProps);
-    }
-    return <SchemaComponent key={componentProps.id} {...componentProps} />;
-  }
+    const getComponent = ({ name, schemaComponent, schemaType }) => {
+      const { props: scopeProps, injector, identifier: scopeIdentifier } = getScope();
 
-  /**
-   * Maps a list of schema fields to their React Component.
-   * Only top level form fields are handled here, composite fields (TabSets etc),
-   * are responsible for mapping and rendering their children.
-   *
-   * @param {Array} fields
-   * @return {Array}
-   */
-  mapFieldsToComponents(fields) {
-    const FieldComponent = this.props.baseFieldComponent;
-    return fields.map((field) => {
-      let props = field;
-      if (field.schemaType === 'StructuralCustom') {
-        // Pass children schema in a separate prop instead of as the `children` prop, which is usually
-        // reserved for actual components that will be rendered.
-        // Also pass through necessary functions for converting field schema to components.
-        props = Object.assign(
-          {},
-          field,
-          {
-            children: null,
-            childrenSchema: field.children,
-            formFieldSchemaFunctions: {
-              mapFieldsToComponents: this.mapFieldsToComponents,
-              normalizeFields: this.normalizeFields,
-            },
+      if (scopeProps.getCustomFields) {
+        const component = scopeProps.getCustomFields(schemaType, `${scopeIdentifier}.${name}`);
+        if (component) {
+          return component;
+        }
+      }
+
+      if (schemaComponent !== null) {
+        return injector.get(schemaComponent, `${scopeIdentifier}.${name}`);
+      }
+
+      return getComponentForDataType(schemaType, name);
+    };
+
+    /**
+     * Common functionality for building a Field or Action from schema.
+     *
+     * @param {Object} props Props which every form field receives. Leave it up to the
+     *        schema and component to determine which props are required.
+     * @returns {*}
+     */
+    const buildComponent = (componentProps) => {
+      const inputProps = componentProps.input || {};
+      const propsForComponent = {
+        ...componentProps,
+        ...componentProps.input,
+        onChange: inputProps.onChange
+          ? (event, payload) => {
+            inputProps.onChange(payload ? payload.value : event);
           }
-        );
-      } else if (field.children) {
-        // Recursively map child field schema to components
-        props = Object.assign(
-          {},
-          field,
-          { children: this.mapFieldsToComponents(field.children) }
-        );
-      }
-      props = Object.assign(
-        {
-          onAutofill: this.props.onAutofill,
-          formid: this.props.form,
-        },
-        props
-      );
+          : null,
+      };
+      delete propsForComponent.input;
 
-      // Don't wrap structural or readonly fields, since they don't need connected fields.
-      // The redux-form connected fields also messed up reactstrap's tab handling.
-      if (field.schemaType === 'Structural' || field.readOnly === true) {
-        return this.buildComponent(props);
+      const SchemaComponent = getComponent(propsForComponent);
+
+      if (SchemaComponent === null) {
+        return null;
+      } else if (propsForComponent.schemaComponent !== null && SchemaComponent === undefined) {
+        throw Error(`Component not found in injector: ${propsForComponent.schemaComponent}`);
       }
 
-      return <FieldComponent key={props.id} {...props} component={this.buildComponent} />;
-    });
-  }
+      const { props: scopeProps } = getScope();
+      if (typeof scopeProps.createFn === 'function') {
+        return scopeProps.createFn(SchemaComponent, propsForComponent);
+      }
+      return <SchemaComponent key={propsForComponent.id} {...propsForComponent} />;
+    };
+
+    /**
+     * Maps a list of schema fields to their React Component.
+     * Only top level form fields are handled here, composite fields (TabSets etc),
+     * are responsible for mapping and rendering their children.
+     *
+     * @param {Array} fields
+     * @return {Array}
+     */
+    const mapFieldsToComponents = (fields) => {
+      const { props: scopeProps } = getScope();
+      // Important: We access FieldComponent from props here to match Class behavior
+      // But we must assume FieldComponent itself is stable from parent.
+      const ScopedFieldComponent = scopeProps.baseFieldComponent;
+
+      return fields.map((field) => {
+        let componentProps = field;
+        if (field.schemaType === 'StructuralCustom') {
+          componentProps = Object.assign(
+            {},
+            field,
+            {
+              children: null,
+              childrenSchema: field.children,
+              formFieldSchemaFunctions: {
+                mapFieldsToComponents,
+                normalizeFields,
+              },
+            }
+          );
+        } else if (field.children) {
+          componentProps = Object.assign(
+            {},
+            field,
+            { children: mapFieldsToComponents(field.children) }
+          );
+        }
+
+        componentProps = Object.assign(
+          {
+            onAutofill,
+            formid: form,
+          },
+          componentProps
+        );
+
+        if (field.schemaType === 'Structural' || field.readOnly === true) {
+          return buildComponent(componentProps);
+        }
+
+        // Pass the stable buildComponent function
+        return <ScopedFieldComponent key={componentProps.id} {...componentProps} component={buildComponent} />;
+      });
+    };
+
+    return {
+      buildComponent,
+      mapFieldsToComponents
+    };
+  }, []);
+
+  // Regular methods
 
   /**
    * When the action is clicked on, records which action was clicked on
@@ -216,17 +261,14 @@ class FormBuilder extends Component {
    *
    * @param {Event} event
    */
-  handleAction(event) {
-    // Custom handlers
-    if (typeof this.props.onAction === 'function') {
-      this.props.onAction(event, this.props.values);
+  const handleAction = (event) => {
+    if (typeof onAction === 'function') {
+      onAction(event, values);
     }
-
-    // Allow custom handlers to cancel event
     if (!event.isPropagationStopped()) {
-      this.setState({ submittingAction: event.currentTarget.name });
+      setSubmittingAction(event.currentTarget.name);
     }
-  }
+  };
 
   /**
    * Form submission handler passed to the Form Component as a prop.
@@ -236,39 +278,39 @@ class FormBuilder extends Component {
    * (originally retrieved through schemaFieldValues())
    * @return {Promise|null}
    */
-  handleSubmit(data) {
+  const handleSubmit = (data) => {
     // Add form action data (or default to first action, same as browser behaviour)
     let action = '';
-    if (this.state.submittingAction) {
-      action = this.state.submittingAction;
-    } else if (this.props.schema.schema.actions[0]) {
-      action = this.props.schema.schema.actions[0].name;
+    if (submittingAction) {
+      action = submittingAction;
+    } else if (schema.schema.actions[0]) {
+      action = schema.schema.actions[0].name;
     }
 
     const dataWithAction = Object.assign({}, data, action ? { [action]: 1 } : {});
-    const requestedSchema = this.props.responseRequestedSchema.join();
+    const requestedSchema = responseRequestedSchema.join();
     const headers = {
       'X-Formschema-Request': requestedSchema,
       'X-Requested-With': 'XMLHttpRequest',
     };
 
     const submitFn = (customData) =>
-      this.submitApi(customData || dataWithAction, headers)
+      submitApi(customData || dataWithAction, headers)
         .then(formSchema => {
-          this.setState({ submittingAction: null });
+          setSubmittingAction(null);
           return formSchema;
         })
         .catch((reason) => {
-          this.setState({ submittingAction: null });
+          setSubmittingAction(null);
           throw reason;
         });
 
-    if (typeof this.props.onSubmit === 'function') {
-      return this.props.onSubmit(dataWithAction, action, submitFn);
+    if (typeof onSubmit === 'function') {
+      return onSubmit(dataWithAction, action, submitFn);
     }
 
     return submitFn();
-  }
+  };
 
   /**
    * Maps a list of form actions to their React Component.
@@ -276,125 +318,122 @@ class FormBuilder extends Component {
    * @param {Array} actions
    * @return {Array}
    */
-  mapActionsToComponents(actions) {
-    return actions.map((action) => {
-      const props = Object.assign({}, action);
+  const mapActionsToComponents = (actions) => actions.map((action) => {
+    const componentProps = Object.assign({}, action);
 
-      if (action.children) {
-        props.children = this.mapActionsToComponents(action.children);
-      } else {
-        props.onClick = this.handleAction;
+    if (action.children) {
+      componentProps.children = mapActionsToComponents(action.children);
+    } else {
+      componentProps.onClick = handleAction;
 
-        // Reset component loading prop
-        if (this.props.submitting && this.state.submittingAction === action.name) {
-          props.loading = true;
-        }
+      if (submitting && submittingAction === action.name) {
+        componentProps.loading = true;
       }
-
-      return this.buildComponent(props);
-    });
-  }
+    }
+    // Use the stable buildComponent
+    return methods.buildComponent(componentProps);
+  });
 
   /**
-   * If there is structural and state data available merge those data for each field.
-   * Otherwise just use the structural data. Ensure that keys don't conflict
-   * with redux-form expectations.
+   * Run validation for every field on the form and return an object which list issues while
+   * validating
    *
-   * @param {array} fields
-   * @param {Object} state Optional
-   * @return {array}
+   * @param valuesParam
+   * @returns {*}
    */
-  normalizeFields(fields, state) {
-    return fields.map((field) => {
-      const fieldState = (state && state.fields)
-        ? state.fields.find((item) => item.id === field.id)
-        : {};
-      const data = merge.recursive(
-        true,
-        schemaMerge(field, fieldState),
-        // Overlap with redux-form prop handling : createFieldProps filters out the 'component' key
-        {
-          schemaComponent: (fieldState && fieldState.component)
-            ? fieldState.component
-            : field.component,
-        }
-      );
-      if (field.children) {
-        data.children = this.normalizeFields(field.children, state);
-      }
+  const validateForm = (valuesParam) => {
+    if (typeof validate === 'function') {
+      return validate(valuesParam);
+    }
 
-      return data;
-    });
-  }
+    // Use fresh props/context
+    const { schema: currentSchema } = latestRef.current.props;
+    const { injector } = latestRef.current.context;
 
-  render() {
-    const schema = this.props.schema.schema;
-    const state = this.props.schema.state;
-    const BaseFormComponent = this.props.baseFormComponent;
+    const sData = currentSchema && currentSchema.schema;
+    if (!sData) {
+      return {};
+    }
 
-    // Map form schema to React component attribute names,
-    // which requires renaming some of them (by unsetting the original keys)
-    const attributes = {
-      ...schema.attributes,
-      className: schema.attributes.class,
-      encType: schema.attributes.enctype,
+    const validationMiddleware = injector.validate(identifier);
+
+    let middlewareValidationResult = {};
+    if (validationMiddleware) {
+      middlewareValidationResult = validationMiddleware(valuesParam, currentSchema.schema) || {};
+    }
+
+    return createErrorBlock(middlewareValidationResult);
+  };
+
+  // 4. Data Preparation
+  const schemaData = schema.schema;
+  const schemaState = schema.state;
+
+  const normalizedFields = useMemo(() =>
+    normalizeFields(schemaData.fields, schemaState),
+  [schemaData.fields, schemaState]
+  );
+
+  const normalizedActions = useMemo(() =>
+    normalizeFields(schemaData.actions, schemaState),
+  [schemaData.actions, schemaState]
+  );
+
+  const initialValues = useMemo(() =>
+    schemaFieldValues(schemaData, schemaState),
+  [schemaData, schemaState]
+  );
+
+  // Map form schema to React component attribute names,
+  // which requires renaming some of them (by unsetting the original keys)
+  const attributes = useMemo(() => {
+    const attrs = {
+      ...schemaData.attributes,
+      className: schemaData.attributes.class,
+      encType: schemaData.attributes.enctype,
       // Turn off HTML5 validation to rely on validateForm as the sole validator
       noValidate: true,
     };
-    delete attributes.class;
-    delete attributes.enctype;
+    delete attrs.class;
+    delete attrs.enctype;
+    return attrs;
+  }, [schemaData.attributes]);
 
-    const {
-      asyncValidate,
-      fieldHolder,
-      actionHolder,
-      onSubmitFail,
-      onSubmitSuccess,
-      shouldAsyncValidate,
-      touchOnBlur,
-      touchOnChange,
-      persistentSubmitErrors,
-      form,
-      afterMessages,
-      autoFocus,
-      formTag,
-    } = this.props;
+  const formProps = {
+    form, // required as redux-form identifier
+    afterMessages,
+    fields: normalizedFields,
+    fieldHolder,
+    actions: normalizedActions,
+    actionHolder,
+    attributes,
+    data: schemaData.data,
+    initialValues,
+    onSubmit: handleSubmit,
+    valid: schemaState && schemaState.valid,
+    messages: (schemaState && Array.isArray(schemaState.messages)) ? schemaState.messages : [],
+    mapActionsToComponents,
+    // Uses the stable method
+    mapFieldsToComponents: methods.mapFieldsToComponents,
+    asyncValidate,
+    onSubmitFail,
+    onSubmitSuccess,
+    shouldAsyncValidate,
+    touchOnBlur,
+    touchOnChange,
+    persistentSubmitErrors,
+    validate: validateForm,
+    autoFocus,
+    setDOM: (formDOM) => { formDOMRef.current = formDOM; },
+    formTag,
+  };
 
-    const props = {
-      form, // required as redux-form identifier
-      afterMessages,
-      fields: this.normalizeFields(schema.fields, state),
-      fieldHolder,
-      actions: this.normalizeFields(schema.actions, state),
-      actionHolder,
-      attributes,
-      data: schema.data,
-      initialValues: schemaFieldValues(schema, state),
-      onSubmit: this.handleSubmit,
-      valid: state && state.valid,
-      messages: (state && Array.isArray(state.messages)) ? state.messages : [],
-      mapActionsToComponents: this.mapActionsToComponents,
-      mapFieldsToComponents: this.mapFieldsToComponents,
-      asyncValidate,
-      onSubmitFail,
-      onSubmitSuccess,
-      shouldAsyncValidate,
-      touchOnBlur,
-      touchOnChange,
-      persistentSubmitErrors,
-      validate: this.validateForm,
-      autoFocus,
-      setDOM: (formDOM) => { this.formDOM = formDOM; },
-      formTag,
-    };
-
-    return (
-      <BaseFormComponent
-        {...props}
-      />
-    );
-  }
-}
+  return (
+    <BaseFormComponent
+      {...formProps}
+    />
+  );
+};
 
 const schemaPropType = PropTypes.shape({
   id: PropTypes.string,
@@ -453,14 +492,10 @@ FormBuilder.propTypes = Object.assign({}, basePropTypes, {
   autoFocus: PropTypes.bool,
 });
 
-FormBuilder.defaultProps = {
-  responseRequestedSchema: ['auto'],
-  autoFocus: false,
-};
-
 export {
   FormBuilder as Component,
   basePropTypes,
   schemaPropType
 };
+
 export default withInjector(FormBuilder);
