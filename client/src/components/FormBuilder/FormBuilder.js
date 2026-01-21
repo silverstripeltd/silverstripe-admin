@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import merge from 'merge';
 import schemaFieldValues, { schemaMerge } from 'lib/schemaFieldValues';
@@ -34,6 +34,16 @@ const normalizeFields = (fields, state) => fields.map((field) => {
   return data;
 });
 
+/**
+ * Component used to build forms, including instantiating the correct components
+ * for form fields and actions.
+ *
+ * Note that several methods in this component are build exactly once using useCallback
+ * with no dependencies, and use the latestRef reference to get the most up to date copy
+ * of context and props.
+ * This is done to ensure these methods have a stable identify so that redux-form
+ * (<BaseFormComponent>) doesn't cause re-renders when these methods change.
+ */
 const FormBuilder = (props, context) => {
   const {
     schema,
@@ -69,191 +79,166 @@ const FormBuilder = (props, context) => {
   // Update immediately for the current render cycle
   latestRef.current = { props, context };
 
-  // Update the ref on every render so methods can access fresh data
-  useEffect(() => {
-    latestRef.current = { props, context };
-  });
-
   const [submittingAction, setSubmittingAction] = useState(null);
   const formDOMRef = useRef(null);
   const schemaStructure = schema.schema;
 
   // Stable API fetcher
-  const submitApi = useRef(backend.createEndpointFetcher({
+  const submitApi = useMemo(() => backend.createEndpointFetcher({
     url: schemaStructure.attributes.action,
     method: schemaStructure.attributes.method,
-  })).current;
+  }), [schemaStructure.attributes]);
 
-  // Create "stable methods" for redux-form that have a stable identity
-  // useMemo and empty dependency array [] is used so that these functions are only created once
-  // This is done to ensure these methods have a stable identify so that redux-form (<BaseFormComponent>)
-  // does cause re-renders when these methods change.
-  const methods = useMemo(() => {
-    // Internal helper to access current scope
-    const getScope = () => {
-      const { props: scopeProps, context: scopeContext } = latestRef.current;
-      return {
-        props: scopeProps,
-        injector: scopeContext.injector,
-        identifier: scopeProps.identifier
-      };
-    };
+  /**
+   * Default data type to component mappings.
+   * Used as a fallback when no component type is provided in the form schema.
+   *
+   * @param {string} dataType - The data type provided by the form schema.
+   * @param {string} name - name of the field component
+   * @return object|null
+   */
+  const getComponentForDataType = useCallback((dataType, name) => {
+    const { injector: latestInjector } = latestRef.current.context;
+    const { identifier: latestIdentifier } = latestRef.current.props;
+    const get = (type) => latestInjector.get(type, `${latestIdentifier}.${name}`);
 
-    /**
-     * Default data type to component mappings.
-     * Used as a fallback when no component type is provided in the form schema.
-     *
-     * @param {string} dataType - The data type provided by the form schema.
-     * @param {string} name - name of the field component
-     * @return object|null
-     */
-    const getComponentForDataType = (dataType, name) => {
-      const { injector, identifier: scopeIdentifier } = getScope();
-      const get = (type) => injector.get(type, `${scopeIdentifier}.${name}`);
-
-      switch (dataType) {
-        case 'Integer':
-        case 'Decimal':
-          return get('NumberField');
-        case 'String':
-        case 'Text':
-          return get('TextField');
-        case 'Date':
-          return get('DateField');
-        case 'Time':
-          return get('TimeField');
-        case 'Datetime':
-          return get('DatetimeField');
-        case 'Hidden':
-          return get('HiddenField');
-        case 'SingleSelect':
-          return get('SingleSelectField');
-        case 'Custom':
-          return get('GridField');
-        case 'Structural':
-          return get('CompositeField');
-        case 'Boolean':
-          return get('CheckboxField');
-        case 'MultiSelect':
-          return get('CheckboxSetField');
-        default:
-          return null;
-      }
-    };
-
-    const getComponent = ({ name, schemaComponent, schemaType }) => {
-      const { props: scopeProps, injector, identifier: scopeIdentifier } = getScope();
-
-      if (scopeProps.getCustomFields) {
-        const component = scopeProps.getCustomFields(schemaType, `${scopeIdentifier}.${name}`);
-        if (component) {
-          return component;
-        }
-      }
-
-      if (schemaComponent !== null) {
-        return injector.get(schemaComponent, `${scopeIdentifier}.${name}`);
-      }
-
-      return getComponentForDataType(schemaType, name);
-    };
-
-    /**
-     * Common functionality for building a Field or Action from schema.
-     *
-     * @param {Object} props Props which every form field receives. Leave it up to the
-     *        schema and component to determine which props are required.
-     * @returns {*}
-     */
-    const buildComponent = (componentProps) => {
-      const inputProps = componentProps.input || {};
-      const propsForComponent = {
-        ...componentProps,
-        ...componentProps.input,
-        onChange: inputProps.onChange
-          ? (event, payload) => {
-            inputProps.onChange(payload ? payload.value : event);
-          }
-          : null,
-      };
-      delete propsForComponent.input;
-
-      const SchemaComponent = getComponent(propsForComponent);
-
-      if (SchemaComponent === null) {
+    switch (dataType) {
+      case 'Integer':
+      case 'Decimal':
+        return get('NumberField');
+      case 'String':
+      case 'Text':
+        return get('TextField');
+      case 'Date':
+        return get('DateField');
+      case 'Time':
+        return get('TimeField');
+      case 'Datetime':
+        return get('DatetimeField');
+      case 'Hidden':
+        return get('HiddenField');
+      case 'SingleSelect':
+        return get('SingleSelectField');
+      case 'Custom':
+        return get('GridField');
+      case 'Structural':
+        return get('CompositeField');
+      case 'Boolean':
+        return get('CheckboxField');
+      case 'MultiSelect':
+        return get('CheckboxSetField');
+      default:
         return null;
-      } else if (propsForComponent.schemaComponent !== null && SchemaComponent === undefined) {
-        throw Error(`Component not found in injector: ${propsForComponent.schemaComponent}`);
-      }
-
-      const { props: scopeProps } = getScope();
-      if (typeof scopeProps.createFn === 'function') {
-        return scopeProps.createFn(SchemaComponent, propsForComponent);
-      }
-      return <SchemaComponent key={propsForComponent.id} {...propsForComponent} />;
-    };
-
-    /**
-     * Maps a list of schema fields to their React Component.
-     * Only top level form fields are handled here, composite fields (TabSets etc),
-     * are responsible for mapping and rendering their children.
-     *
-     * @param {Array} fields
-     * @return {Array}
-     */
-    const mapFieldsToComponents = (fields) => {
-      const { props: scopeProps } = getScope();
-      // Important: We access FieldComponent from props here to match Class behavior
-      // But we must assume FieldComponent itself is stable from parent.
-      const ScopedFieldComponent = scopeProps.baseFieldComponent;
-
-      return fields.map((field) => {
-        let componentProps = field;
-        if (field.schemaType === 'StructuralCustom') {
-          componentProps = Object.assign(
-            {},
-            field,
-            {
-              children: null,
-              childrenSchema: field.children,
-              formFieldSchemaFunctions: {
-                mapFieldsToComponents,
-                normalizeFields,
-              },
-            }
-          );
-        } else if (field.children) {
-          componentProps = Object.assign(
-            {},
-            field,
-            { children: mapFieldsToComponents(field.children) }
-          );
-        }
-
-        componentProps = Object.assign(
-          {
-            onAutofill,
-            formid: form,
-          },
-          componentProps
-        );
-
-        if (field.schemaType === 'Structural' || field.readOnly === true) {
-          return buildComponent(componentProps);
-        }
-
-        // Pass the stable buildComponent function
-        return <ScopedFieldComponent key={componentProps.id} {...componentProps} component={buildComponent} />;
-      });
-    };
-
-    return {
-      buildComponent,
-      mapFieldsToComponents
-    };
+    }
   }, []);
 
-  // Regular methods
+  const getComponent = useCallback(({ name, schemaComponent, schemaType }) => {
+    const latestProps = latestRef.current.props;
+    const { injector: latestInjector } = latestRef.current.context;
+    const { identifier: latestIdentifier } = latestProps;
+
+    if (latestProps.getCustomFields) {
+      const component = latestProps.getCustomFields(schemaType, `${latestIdentifier}.${name}`);
+      if (component) {
+        return component;
+      }
+    }
+
+    if (schemaComponent !== null) {
+      return latestInjector.get(schemaComponent, `${latestIdentifier}.${name}`);
+    }
+
+    return getComponentForDataType(schemaType, name);
+  }, []);
+
+  /**
+   * Common functionality for building a Field or Action from schema.
+   *
+   * @param {Object} props Props which every form field receives. Leave it up to the
+   *        schema and component to determine which props are required.
+   * @returns {*}
+   */
+  const buildComponent = useCallback((componentProps) => {
+    const inputProps = componentProps.input || {};
+    const propsForComponent = {
+      ...componentProps,
+      ...componentProps.input,
+      onChange: inputProps.onChange
+        ? (event, payload) => {
+          inputProps.onChange(payload ? payload.value : event);
+        }
+        : null,
+    };
+    delete propsForComponent.input;
+
+    const SchemaComponent = getComponent(propsForComponent);
+
+    if (SchemaComponent === null) {
+      return null;
+    } else if (propsForComponent.schemaComponent !== null && SchemaComponent === undefined) {
+      throw Error(`Component not found in injector: ${propsForComponent.schemaComponent}`);
+    }
+
+    const latestProps = latestRef.current.props;
+    if (typeof latestProps.createFn === 'function') {
+      return latestProps.createFn(SchemaComponent, propsForComponent);
+    }
+    return <SchemaComponent key={propsForComponent.id} {...propsForComponent} />;
+  }, []);
+
+  /**
+   * Maps a list of schema fields to their React Component.
+   * Only top level form fields are handled here, composite fields (TabSets etc),
+   * are responsible for mapping and rendering their children.
+   *
+   * @param {Array} fields
+   * @return {Array}
+   */
+  const mapFieldsToComponents = useCallback((fields) => {
+    const latestProps = latestRef.current.props;
+    // Important: We access FieldComponent from props here to match Class behavior
+    // But we must assume FieldComponent itself is stable from parent.
+    const ScopedFieldComponent = latestProps.baseFieldComponent;
+
+    return fields.map((field) => {
+      let componentProps = field;
+      if (field.schemaType === 'StructuralCustom') {
+        componentProps = Object.assign(
+          {},
+          field,
+          {
+            children: null,
+            childrenSchema: field.children,
+            formFieldSchemaFunctions: {
+              mapFieldsToComponents,
+              normalizeFields,
+            },
+          }
+        );
+      } else if (field.children) {
+        componentProps = Object.assign(
+          {},
+          field,
+          { children: mapFieldsToComponents(field.children) }
+        );
+      }
+
+      componentProps = Object.assign(
+        {
+          onAutofill,
+          formid: form,
+        },
+        componentProps
+      );
+
+      if (field.schemaType === 'Structural' || field.readOnly === true) {
+        return buildComponent(componentProps);
+      }
+
+      // Pass the stable buildComponent function
+      return <ScopedFieldComponent key={componentProps.id} {...componentProps} component={buildComponent} />;
+    });
+  }, []);
 
   /**
    * When the action is clicked on, records which action was clicked on
@@ -331,7 +316,7 @@ const FormBuilder = (props, context) => {
       }
     }
     // Use the stable buildComponent
-    return methods.buildComponent(componentProps);
+    return buildComponent(componentProps);
   });
 
   /**
@@ -346,20 +331,16 @@ const FormBuilder = (props, context) => {
       return validate(valuesParam);
     }
 
-    // Use fresh props/context
-    const { schema: currentSchema } = latestRef.current.props;
-    const { injector } = latestRef.current.context;
-
-    const sData = currentSchema && currentSchema.schema;
+    const sData = schema && schema.schema;
     if (!sData) {
       return {};
     }
 
-    const validationMiddleware = injector.validate(identifier);
+    const validationMiddleware = context.injector.validate(identifier);
 
     let middlewareValidationResult = {};
     if (validationMiddleware) {
-      middlewareValidationResult = validationMiddleware(valuesParam, currentSchema.schema) || {};
+      middlewareValidationResult = validationMiddleware(valuesParam, schema.schema) || {};
     }
 
     return createErrorBlock(middlewareValidationResult);
@@ -413,8 +394,7 @@ const FormBuilder = (props, context) => {
     valid: schemaState && schemaState.valid,
     messages: (schemaState && Array.isArray(schemaState.messages)) ? schemaState.messages : [],
     mapActionsToComponents,
-    // Uses the stable method
-    mapFieldsToComponents: methods.mapFieldsToComponents,
+    mapFieldsToComponents,
     asyncValidate,
     onSubmitFail,
     onSubmitSuccess,

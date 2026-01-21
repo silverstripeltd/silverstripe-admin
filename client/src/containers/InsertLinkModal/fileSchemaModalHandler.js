@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import * as schemaActions from 'state/schema/SchemaActions';
@@ -14,17 +14,6 @@ const FileSchemaHandler = (_props) => {
     actions
   } = props;
 
-  // Keep track of the latest values in refs to avoid stale closures
-  const schemaUrlRef = useRef(schemaUrl);
-  const actionsRef = useRef(actions);
-
-  // Store the latest props in refs immediately during the render phase.
-  // We do this instead of using useEffect so that if a child component runs its
-  // own effects or renders immediately, 'setOverrides' already has access to
-  // the fresh data from this render cycle.
-  schemaUrlRef.current = schemaUrl;
-  actionsRef.current = actions;
-
   /**
    * Compares the current properties with received properties and determines if overrides need to be
    * cleared or added.
@@ -34,8 +23,8 @@ const FileSchemaHandler = (_props) => {
   const setOverrides = useCallback((propsParam = null) => {
     if (!propsParam) {
       // clear any overrides that may be in place
-      if (schemaUrlRef.current) {
-        actionsRef.current.schema.setSchemaStateOverrides(schemaUrlRef.current, null);
+      if (schemaUrl) {
+        actions.schema.setSchemaStateOverrides(schemaUrl, null);
       }
     } else if (propsParam.schemaUrl) {
       const attrs = Object.assign({}, propsParam.fileAttributes);
@@ -50,9 +39,9 @@ const FileSchemaHandler = (_props) => {
       };
       // set overrides into redux store, so that it can be accessed by FormBuilder with the same
       // schemaUrl.
-      actionsRef.current.schema.setSchemaStateOverrides(propsParam.schemaUrl, overrides);
+      actions.schema.setSchemaStateOverrides(propsParam.schemaUrl, overrides);
     }
-  }, []);
+  }, [schemaUrl, actions]);
 
   useEffect(() => {
     setOverrides(_props);
