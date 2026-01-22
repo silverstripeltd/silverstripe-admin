@@ -1,39 +1,33 @@
-import React, { Component } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import * as schemaActions from 'state/schema/SchemaActions';
 import { connect } from 'react-redux';
 
-class FileSchemaHandler extends Component {
-  constructor(props) {
-    super(props);
-
-    this.setOverrides = this.setOverrides.bind(this);
-  }
-
-  componentDidMount() {
-    this.setOverrides(this.props);
-  }
-
-  componentWillUnmount() {
-    this.setOverrides();
-  }
+const FileSchemaHandler = (_props) => {
+  const {
+    Component: TargetComponent,
+    ...props
+  } = _props;
+  const {
+    schemaUrl,
+    actions
+  } = props;
 
   /**
    * Compares the current properties with received properties and determines if overrides need to be
    * cleared or added.
    *
-   * @param {object} props
+   * @param {object} propsParam
    */
-  setOverrides(props = null) {
-    if (!props) {
+  const setOverrides = useCallback((propsParam = null) => {
+    if (!propsParam) {
       // clear any overrides that may be in place
-      const schemaUrl = this.props.schemaUrl;
       if (schemaUrl) {
-        this.props.actions.schema.setSchemaStateOverrides(schemaUrl, null);
+        actions.schema.setSchemaStateOverrides(schemaUrl, null);
       }
-    } else if (props.schemaUrl) {
-      const attrs = Object.assign({}, props.fileAttributes);
+    } else if (propsParam.schemaUrl) {
+      const attrs = Object.assign({}, propsParam.fileAttributes);
 
       delete attrs.ID;
 
@@ -45,16 +39,19 @@ class FileSchemaHandler extends Component {
       };
       // set overrides into redux store, so that it can be accessed by FormBuilder with the same
       // schemaUrl.
-      this.props.actions.schema.setSchemaStateOverrides(props.schemaUrl, overrides);
+      actions.schema.setSchemaStateOverrides(propsParam.schemaUrl, overrides);
     }
-  }
+  }, [schemaUrl, actions]);
 
-  render() {
-    const { Component: TargetComponent, ...props } = this.props;
+  useEffect(() => {
+    setOverrides(_props);
+    return () => {
+      setOverrides();
+    };
+  }, []);
 
-    return <TargetComponent setOverrides={this.setOverrides} {...props} />;
-  }
-}
+  return <TargetComponent setOverrides={setOverrides} {...props} />;
+};
 
 FileSchemaHandler.propTypes = {
   fileAttributes: PropTypes.object,
