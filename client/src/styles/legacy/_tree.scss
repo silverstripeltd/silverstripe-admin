@@ -615,6 +615,12 @@
       }
     }
   }
+
+  /* Lift the native keyboard focus outline above overlapping siblings */
+  a:focus-visible {
+    position: relative;
+    z-index: 10;
+  }
 }
 /* stylelint-enable max-nesting-depth */
 
@@ -763,3 +769,12 @@ a .jstree-recordicon {
   }
 }
 /* stylelint-enable no-duplicate-selectors */
+
+/**
+ * Focus outline for tree container which has a roving index
+ * Displays a dashed outline around the entire tree when keyboard focus is within it.
+ */
+.cms-tree:has(:focus-visible) {
+  outline: var(--focus-outline-width) dashed var(--focus-outline-color);
+  outline-offset: calc(var(--focus-outline-offset) * 7.5 + var(--focus-outline-width));
+}
