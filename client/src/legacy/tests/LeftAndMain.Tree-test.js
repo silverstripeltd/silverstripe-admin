@@ -13,10 +13,10 @@ test('ArrowUp should navigate to parent element', () => {
     <div class="cms-tree">
       <ul>
         <li id="record-0" class="jstree-open" data-id="0">
-          <ins class="jstree-icon root-toggle" tabindex="-1"></ins>
+          <span class="jstree-icon jstree-icon--arrow root-toggle" tabindex="-1"></span>
           <ul>
             <li data-id="1" class="jstree-leaf">
-              <ins class="jstree-icon"></ins>
+              <span class="jstree-icon jstree-icon--arrow"></span>
               <a class="node-1" tabindex="0">Page 1</a>
             </li>
           </ul>
@@ -33,14 +33,14 @@ test('Home key should focus first page node', () => {
     <div class="cms-tree">
       <ul>
         <li id="record-0" class="jstree-open" data-id="0">
-          <ins class="jstree-icon" tabindex="-1"></ins>
+          <span class="jstree-icon jstree-icon--arrow" tabindex="-1"></span>
           <ul>
             <li data-id="1" class="jstree-leaf">
-              <ins class="jstree-icon"></ins>
+              <span class="jstree-icon jstree-icon--arrow"></span>
               <a class="node-1" tabindex="-1">Page 1</a>
             </li>
             <li data-id="2" class="jstree-leaf">
-              <ins class="jstree-icon"></ins>
+              <span class="jstree-icon jstree-icon--arrow"></span>
               <a class="node-2" tabindex="0" aria-current="page">Page 2</a>
             </li>
           </ul>
@@ -63,14 +63,14 @@ test('When no aria-current page exists, first page has tabindex 0', () => {
     <div class="cms-tree">
       <ul>
         <li id="record-0" class="jstree-open" data-id="0">
-          <ins class="jstree-icon" tabindex="0"></ins>
+          <span class="jstree-icon jstree-icon--arrow" tabindex="0"></span>
           <ul>
             <li data-id="1" class="jstree-leaf">
-              <ins class="jstree-icon"></ins>
+              <span class="jstree-icon jstree-icon--arrow"></span>
               <a class="node-1" tabindex="-1">Page 1</a>
             </li>
             <li data-id="2" class="jstree-leaf">
-              <ins class="jstree-icon"></ins>
+              <span class="jstree-icon jstree-icon--arrow"></span>
               <a class="node-2" tabindex="0">Page 2</a>
             </li>
           </ul>
@@ -82,7 +82,7 @@ test('When no aria-current page exists, first page has tabindex 0', () => {
   resetTabindexToCurrentPage($tree);
   expect($('.node-1').attr('tabindex')).toBe('0');
   expect($('.node-2').attr('tabindex')).toBe('-1');
-  expect($('#record-0 > ins').attr('tabindex')).toBe('-1');
+  expect($('#record-0 > .jstree-icon--arrow').attr('tabindex')).toBe('-1');
 });
 
 test('Root toggle can be focused via updateRovingTabindex', () => {
@@ -90,10 +90,10 @@ test('Root toggle can be focused via updateRovingTabindex', () => {
     <div class="cms-tree">
       <ul>
         <li id="record-0" class="jstree-open" data-id="0">
-          <ins class="jstree-icon root-toggle" tabindex="-1"></ins>
+          <span class="jstree-icon jstree-icon--arrow root-toggle" tabindex="-1"></span>
           <ul>
             <li data-id="1" class="jstree-leaf">
-              <ins class="jstree-icon"></ins>
+              <span class="jstree-icon jstree-icon--arrow"></span>
               <a class="node-1" tabindex="0">Page 1</a>
             </li>
           </ul>
@@ -111,10 +111,20 @@ test('Root toggle can be focused via updateRovingTabindex', () => {
 test('updateRovingTabindex sets single focusable element', () => {
   document.body.innerHTML = `
     <div class="cms-tree">
-      <a class="node-1" tabindex="0"></a>
-      <a class="node-2" tabindex="-1"></a>
-      <a class="node-3" tabindex="-1" aria-current="page"></a>
-      <ins class="toggle-1" tabindex="0"></ins>
+      <ul>
+        <li data-id="1">
+          <span class="jstree-icon jstree-icon--arrow toggle-1" tabindex="0"></span>
+          <a class="node-1" tabindex="0"></a>
+        </li>
+        <li data-id="2">
+          <span class="jstree-icon jstree-icon--arrow" tabindex="-1"></span>
+          <a class="node-2" tabindex="-1"></a>
+        </li>
+        <li data-id="3">
+          <span class="jstree-icon jstree-icon--arrow" tabindex="-1"></span>
+          <a class="node-3" tabindex="-1" aria-current="page"></a>
+        </li>
+      </ul>
     </div>
   `;
   const $tree = $('.cms-tree');
@@ -130,8 +140,12 @@ test('updateRovingTabindex sets single focusable element', () => {
 test('updateRovingTabindex works with toggle elements', () => {
   document.body.innerHTML = `
     <div class="cms-tree">
-      <a class="node-1" tabindex="0"></a>
-      <ins class="toggle-1" tabindex="-1"></ins>
+      <ul>
+        <li data-id="1">
+          <span class="jstree-icon jstree-icon--arrow toggle-1" tabindex="-1"></span>
+          <a class="node-1" tabindex="0"></a>
+        </li>
+      </ul>
     </div>
   `;
   const $tree = $('.cms-tree');
@@ -144,10 +158,12 @@ test('updateRovingTabindex works with toggle elements', () => {
 test('resetTabindexToCurrentPage focuses aria-current page', () => {
   document.body.innerHTML = `
     <div class="cms-tree">
-      <li data-id="1"><a class="node-1" tabindex="-1"></a></li>
-      <li data-id="2"><a class="node-2" tabindex="0"></a></li>
-      <li data-id="3"><a class="node-3" tabindex="-1" aria-current="page"></a></li>
-      <ins class="toggle-1" tabindex="-1"></ins>
+      <ul>
+        <li data-id="0"><span class="jstree-icon jstree-icon--arrow toggle-1" tabindex="-1"></span></li>
+        <li data-id="1"><a class="node-1" tabindex="-1"></a></li>
+        <li data-id="2"><a class="node-2" tabindex="0"></a></li>
+        <li data-id="3"><a class="node-3" tabindex="-1" aria-current="page"></a></li>
+      </ul>
     </div>
   `;
   const $tree = $('.cms-tree');
@@ -161,7 +177,7 @@ test('resetTabindexToCurrentPage focuses aria-current page', () => {
 test('resetTabindexToCurrentPage focuses first page when no aria-current', () => {
   document.body.innerHTML = `
     <div class="cms-tree">
-      <li data-id="0"><ins class="toggle-0" tabindex="-1"></ins></li>
+      <li data-id="0"><span class="jstree-icon jstree-icon--arrow toggle-0" tabindex="-1"></span></li>
       <li data-id="1"><a class="node-1" tabindex="-1"></a></li>
       <li data-id="2"><a class="node-2" tabindex="0"></a></li>
     </div>
@@ -178,11 +194,11 @@ test('ArrowUp from first page stays on first page (root is not keyboard focusabl
     <div class="cms-tree">
       <ul>
         <li id="record-0" class="jstree-open" data-id="0">
-          <ins class="jstree-icon"></ins>
+          <span class="jstree-icon jstree-icon--arrow"></span>
           <strong class="root-strong">Your Site Name</strong>
           <ul>
             <li data-id="1" class="jstree-leaf">
-              <ins class="jstree-icon"></ins>
+              <span class="jstree-icon jstree-icon--arrow"></span>
               <a class="node-1" tabindex="0">Page 1</a>
             </li>
           </ul>
@@ -201,14 +217,14 @@ test('Tree with .multiple class can identify checkable nodes', () => {
     <div class="cms-tree multiple jstree">
       <ul>
         <li id="record-0" class="jstree-open" data-id="0">
-          <ins class="jstree-icon"></ins>
+          <span class="jstree-icon jstree-icon--arrow"></span>
           <ul>
             <li data-id="1" class="jstree-leaf">
-              <ins class="jstree-icon"></ins>
+              <span class="jstree-icon jstree-icon--arrow"></span>
               <a class="node-1" tabindex="0">Page 1</a>
             </li>
             <li data-id="2" class="jstree-leaf jstree-checked">
-              <ins class="jstree-icon"></ins>
+              <span class="jstree-icon jstree-icon--arrow"></span>
               <a class="node-2" tabindex="-1">Page 2</a>
             </li>
           </ul>
@@ -229,10 +245,10 @@ test('Tree without .multiple class is not in batch mode', () => {
     <div class="cms-tree jstree">
       <ul>
         <li id="record-0" class="jstree-open" data-id="0">
-          <ins class="jstree-icon"></ins>
+          <span class="jstree-icon jstree-icon--arrow"></span>
           <ul>
             <li data-id="1" class="jstree-leaf">
-              <ins class="jstree-icon"></ins>
+              <span class="jstree-icon jstree-icon--arrow"></span>
               <a class="node-1" tabindex="0">Page 1</a>
             </li>
           </ul>
@@ -249,7 +265,7 @@ test('Tree container element exists for focus styling', () => {
     <div class="cms-tree">
       <ul>
         <li id="record-0" class="jstree-open" data-id="0">
-          <ins class="jstree-icon"></ins>
+          <span class="jstree-icon jstree-icon--arrow"></span>
           <a class="node-root" tabindex="0">Root</a>
         </li>
       </ul>

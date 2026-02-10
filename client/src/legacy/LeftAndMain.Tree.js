@@ -12,7 +12,7 @@ const updateRovingTabindex = ($tree, $targetAnchor) => {
     return;
   }
   const $links = $tree.find('a');
-  const $toggles = $tree.find('ins');
+  const $toggles = $tree.find('li > .jstree-icon--arrow');
   $links.attr('tabindex', -1);
   $toggles.attr('tabindex', -1);
   $targetAnchor.attr('tabindex', 0);
@@ -24,7 +24,7 @@ const resetTabindexToCurrentPage = ($tree) => {
   }
   const $currentPage = $tree.find('a[aria-current="page"]').first();
   const $links = $tree.find('a');
-  const $toggles = $tree.find('ins');
+  const $toggles = $tree.find('li > .jstree-icon--arrow');
   $links.attr('tabindex', -1);
   $toggles.attr('tabindex', -1);
   if ($currentPage.length) {
@@ -179,10 +179,10 @@ if (typeof $.entwine === 'function') {
             var key = e.key;
             var target = e.target;
 
-            // Helper to get the toggle element (ins) for a li node
+            // Helper to get the toggle element (.jstree-icon--arrow) for a li node
             var getDirectToggle = function($li) {
-              var ins = $li.children('ins')[0];
-              return ins || null;
+              var toggle = $li.children('.jstree-icon--arrow')[0];
+              return toggle || null;
             };
 
             // Helper to get the direct anchor (<a>) for a li node
