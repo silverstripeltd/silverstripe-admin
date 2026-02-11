@@ -513,7 +513,7 @@ $.entwine('ss', function($) {
 
       return $.path.makeUrlAbsolute(
         grid.data('url') + connector + data,
-        $('base').attr('href')
+        document.baseURI
       );
     }
 

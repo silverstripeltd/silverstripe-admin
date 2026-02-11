@@ -1,5 +1,4 @@
 import $ from 'jquery';
-import { joinUrlPaths } from 'lib/urls';
 
 $.entwine('ss', function($){
 
@@ -208,7 +207,7 @@ $.entwine('ss', function($){
       var item = this.getMenuItem();
 
       var url = this.attr('href');
-      if(!isExternal) url = joinUrlPaths($('base').attr('href'), url);
+      if(!isExternal) url = $.path.makeUrlAbsolute(url, document.baseURI);
       document.location.href = url;
 
       item.select();
