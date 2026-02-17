@@ -65,7 +65,7 @@ $.entwine('ss', function($){
           self.jstree('uncheck_all');
 
           // Ensure URL is absolute (important for IE)
-          if($.path.isExternal($(node).find('a:first'))) url = url = $.path.makeUrlAbsolute(url, $('base').attr('href'));
+          if($.path.isExternal($(node).find('a:first'))) url = url = $.path.makeUrlAbsolute(url, document.baseURI);
           // Retain search parameters
           if(document.location.search) url = $.path.addSearchParams(url, document.location.search.replace(/^\?/, ''));
           // Load new page

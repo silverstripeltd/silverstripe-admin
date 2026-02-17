@@ -6,6 +6,7 @@ use BadMethodCallException;
 use InvalidArgumentException;
 use SilverStripe\Control\ContentNegotiator;
 use SilverStripe\Control\Controller;
+use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\HTTPResponse_Exception;
@@ -193,11 +194,11 @@ abstract class AdminController extends Controller implements i18nEntityProvider
         $name = static::config()->get('section_name') ?: static::class;
         // Trim leading/trailing slash to make it easier to concatenate URL
         // and use in routing definitions.
-        $url = trim($this->Link(), '/');
+        $url = trim(Director::makeRelative($this->Link()), '/');
         $clientConfig = [
             'name' => $name,
             'url' => $url,
-            'reactRoutePath' => preg_replace('/^' . preg_quote(AdminRootController::admin_url(), '/') . '/', '', $url),
+            'reactRoutePath' => preg_replace('/^' . preg_quote(trim(Director::makeRelative(AdminRootController::admin_url()), '/'), '/') . '/', '', $url),
         ];
         $this->extend('updateClientConfig', $clientConfig);
         return $clientConfig;

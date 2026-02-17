@@ -8,7 +8,6 @@ import IframeDialog from 'components/IframeDialog/IframeDialog';
 import Loading from 'components/Loading/Loading';
 import { loadComponent } from 'lib/Injector';
 import escapeRegExp from 'lodash.escaperegexp';
-
 import '../legacy/ssui.core.js';
 
 $.noConflict();
@@ -63,7 +62,7 @@ window.ss.formatTabStateUrl = function(url) {
   return url
     .replace(/\?.*/, '')
     .replace(/#.*/, '')
-    .replace(new RegExp(`^${escapeRegExp($('base').attr('href'))}/?`), '');
+    .replace(new RegExp(`^${escapeRegExp(window.ss.config.absoluteBaseUrl)}/?`), '');
 };
 
 $(window).on('resize.leftandmain', function(e) {
@@ -161,7 +160,7 @@ $.entwine('ss', function($) {
    * Also normalizes relative URLs by prefixing them with the <base>.
    */
   var isSameUrl = function(url1, url2) {
-    var baseUrl = $('base').attr('href');
+    var baseUrl = document.baseURI;
     url1 = $.path.isAbsoluteUrl(url1) ? url1 : $.path.makeUrlAbsolute(url1, baseUrl),
     url2 = $.path.isAbsoluteUrl(url2) ? url2 : $.path.makeUrlAbsolute(url2, baseUrl);
     var url1parts = $.path.parseUrl(url1), url2parts = $.path.parseUrl(url2);
@@ -756,7 +755,7 @@ $.entwine('ss', function($) {
       var self = this,
         xhr,
         headers = {},
-        baseUrl = $('base').attr('href'),
+        baseUrl = document.baseURI,
         fragmentXHR = this.getFragmentXHR();
 
       // Make sure only one XHR for a specific fragment is currently in progress.
@@ -817,7 +816,7 @@ $.entwine('ss', function($) {
 
       // Support a full reload
       if(xhr.getResponseHeader('X-Reload') && xhr.getResponseHeader('X-ControllerURL')) {
-        const baseUrl = $('base').attr('href');
+        const baseUrl = document.baseURI;
         const rawURL = xhr.getResponseHeader('X-ControllerURL');
         const url = $.path.isAbsoluteUrl(rawURL) ? rawURL : $.path.makeUrlAbsolute(rawURL, baseUrl);
 

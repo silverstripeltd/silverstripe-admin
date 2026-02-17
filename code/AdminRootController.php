@@ -8,6 +8,7 @@ use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\View\SSViewer;
 use SilverStripe\View\TemplateGlobalProvider;
 
 /**
@@ -56,7 +57,13 @@ class AdminRootController extends Controller implements TemplateGlobalProvider
      */
     public static function admin_url(string $action = ''): string
     {
-        return Controller::join_links(AdminRootController::get_admin_route(), $action);
+        $parts = [AdminRootController::get_admin_route(), $action];
+        // If the base tag is disabled, we need to make the admin URL absolute to ensure it works correctly
+        // As a major version chagne, we could drop this condition and always prefix with Director::baseURL()
+        if (!SSViewer::config()->get('enable_base_tag')) {
+            array_unshift($parts, Director::baseURL());
+        }
+        return Controller::join_links(...$parts);
     }
 
     /**

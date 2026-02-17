@@ -4,6 +4,7 @@ namespace SilverStripe\Admin\Forms;
 
 use InvalidArgumentException;
 use LogicException;
+use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\NullHTTPRequest;
@@ -429,9 +430,10 @@ class DependentCompositeField extends FormField implements ChildFieldManager
         // For example the value for SearchableDropdownField will be a weird associative array
         // instead of a raw ID value.
         $form = $this->getForm();
+        // Make relative because HTTPRequest::setUrl() strips the base URL and leading slashes
         $baseURL = $form?->FormAction();
         $request = $this->getRequestForSession();
-        if ($baseURL && $request?->hasSession() && str_starts_with($request->getURL(), $baseURL)) {
+        if ($baseURL && $request?->hasSession() && str_starts_with($request->getURL(), Director::makeRelative($baseURL))) {
             $session = $request->getSession();
             $sessionName = $this->getSessionName();
             $sessionData = $session->get($sessionName) ?? [];
