@@ -1,22 +1,42 @@
 import fieldHolder from 'components/FieldHolder/FieldHolder';
-import InputField from '../InputField/InputField';
+import {
+  getInputProps as getInputFieldProps,
+  handleChange as handleChangeInputField,
+  render as renderInputField,
+  propTypes as inputFieldPropTypes,
+} from '../InputField/InputField';
 
-class NumberField extends InputField {
-  /**
-   * Fetches the properties for the number field
-   *
-   * @returns {object} properties
-   */
-  getInputProps() {
-    const props = super.getInputProps();
+/**
+ * Fetches the properties for the number field
+ *
+ * @returns {object} properties
+ */
+const getInputProps = (props) => {
+  const inputProps = getInputFieldProps(props, handleChangeInputField);
+  Object.assign(inputProps, {
+    type: 'number',
+  });
+  return inputProps;
+};
 
-    Object.assign(props, {
-      type: 'number',
-    });
+const NumberField = (_props) => {
+  const defaultProps = {
+    attributes: {},
+    className: '',
+    extraClass: '',
+    type: 'text',
+    value: '',
+  };
 
-    return props;
-  }
-}
+  const props = {
+    ...defaultProps,
+    ..._props,
+  };
+  const inputProps = getInputProps(props);
+  return renderInputField(props, inputProps);
+};
+
+NumberField.propTypes = inputFieldPropTypes;
 
 export { NumberField as Component };
 
