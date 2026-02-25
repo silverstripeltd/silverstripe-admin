@@ -4,14 +4,15 @@ namespace SilverStripe\Admin;
 
 use InvalidArgumentException;
 use LogicException;
-use ReflectionClass;
-use SilverStripe\CMS\Controllers\CMSMain;
+use SilverStripe\Admin\Forms\UnsavedChangesIndicator;
 use SilverStripe\Admin\Navigator\SilverStripeNavigator;
+use SilverStripe\Admin\SingleRecordAdmin;
+use SilverStripe\CMS\Controllers\CMSMain;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
-use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\HTTPResponse_Exception;
+use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\PjaxResponseNegotiator;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Config;
@@ -19,6 +20,8 @@ use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Manifest\ModuleResourceLoader;
 use SilverStripe\Core\Manifest\VersionProvider;
+use SilverStripe\Core\Validation\ValidationException;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\Dev\TestOnly;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
@@ -28,22 +31,19 @@ use SilverStripe\Forms\HiddenField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\PrintableTransformation;
 use SilverStripe\i18n\i18n;
+use SilverStripe\Model\ArrayData;
 use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\List\SS_List;
 use SilverStripe\ORM\CMSPreviewable;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\ORM\Hierarchy\Hierarchy;
-use SilverStripe\Model\List\SS_List;
-use SilverStripe\Core\Validation\ValidationException;
-use SilverStripe\Core\Validation\ValidationResult;
-use SilverStripe\Admin\Forms\UnsavedChangesIndicator;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Security\Security;
 use SilverStripe\Security\SecurityToken;
 use SilverStripe\SiteConfig\SiteConfig;
-use SilverStripe\Model\ArrayData;
 use SilverStripe\View\Requirements;
 use SilverStripe\View\SSViewer;
 
@@ -86,6 +86,11 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
      * When set to true, this controller isn't given a menu item in the left panel in the CMS.
      */
     private static bool $ignore_menuitem = false;
+
+    /**
+     * When set to true, this controller is skipped when generating CMS access permissions.
+     */
+    private static bool $skip_permission_generation = false;
 
     /**
      * A subclass of {@link DataObject}.
@@ -1442,22 +1447,22 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
                 'sort' => -100
             ]
         ];
-
-        // Add any custom ModelAdmin subclasses. Can't put this on ModelAdmin itself
-        // since its marked abstract, and needs to be singleton instantiated.
-        foreach (ClassInfo::subclassesFor(ModelAdmin::class) as $i => $class) {
-            if ($class === ModelAdmin::class) {
-                continue;
-            }
+        // Add any custom ModelAdmin or SingleRecordAdmin subclasses.
+        $classes = array_merge(
+            ClassInfo::subclassesFor(ModelAdmin::class, false),
+            ClassInfo::subclassesFor(SingleRecordAdmin::class, false)
+        );
+        foreach ($classes as $class) {
             if (ClassInfo::classImplements($class, TestOnly::class)) {
                 continue;
             }
-
+            if (Config::inst()->get($class, 'skip_permission_generation')) {
+                continue;
+            }
             // Check if modeladmin has explicit required_permission_codes option.
             // If a modeladmin is namespaced you can apply this config to override
             // the default permission generation based on fully qualified class name.
             $code = $class::getRequiredPermissions();
-
             if (!$code) {
                 continue;
             }
@@ -1476,7 +1481,6 @@ class LeftAndMain extends FormSchemaController implements PermissionProvider
                 'category' => _t(__CLASS__ . '.CMS_ACCESS_CATEGORY', 'CMS Access')
             ];
         }
-
         return $perms;
     }
 
