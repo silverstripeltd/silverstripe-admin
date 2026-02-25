@@ -195,10 +195,13 @@ abstract class AdminController extends Controller implements i18nEntityProvider
         // Trim leading/trailing slash to make it easier to concatenate URL
         // and use in routing definitions.
         $url = trim(Director::makeRelative($this->Link()), '/');
+        $toReplace = preg_quote(trim(Director::makeRelative(AdminRootController::admin_url()), '/'), '/');
+        $reactRoutePath = preg_replace('/^' . $toReplace . '/', '', $url);
+        $reactRoutePath = ltrim($reactRoutePath ?? '', '/');
         $clientConfig = [
             'name' => $name,
             'url' => $url,
-            'reactRoutePath' => preg_replace('/^' . preg_quote(trim(Director::makeRelative(AdminRootController::admin_url()), '/'), '/') . '/', '', $url),
+            'reactRoutePath' => $reactRoutePath,
         ];
         $this->extend('updateClientConfig', $clientConfig);
         return $clientConfig;

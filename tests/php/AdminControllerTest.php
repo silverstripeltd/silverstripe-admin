@@ -11,6 +11,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use SilverStripe\Admin\CMSProfileController;
 use SilverStripe\Admin\SecurityAdmin;
 use SilverStripe\Admin\Tests\LeftAndMainTest\DualPermissionAdminController;
+use SilverStripe\Admin\Tests\LeftAndMainTest\MyTreeController;
 use SilverStripe\Admin\Tests\LeftAndMainTest\TestAdminController;
 
 class AdminControllerTest extends FunctionalTest
@@ -93,6 +94,14 @@ class AdminControllerTest extends FunctionalTest
         foreach ($disallowed as $disallowedClass) {
             $this->assertFalse($disallowedClass::singleton()->canView(), 'Tried to access ' . $disallowedClass);
         }
+    }
+
+    public function testGetClientConfigNormalisesReactRoutePath()
+    {
+        $controller = MyTreeController::singleton();
+        $config = $controller->getClientConfig();
+
+        $this->assertSame('mytree/edit', $config['reactRoutePath']);
     }
 
     public static function provideJsonSuccess(): array
