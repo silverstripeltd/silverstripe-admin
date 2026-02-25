@@ -128,7 +128,6 @@ class LeftAndMainTest extends FunctionalTest
         $this->assertMatchesRegularExpression('/<body[^>]*>/i', $response->getBody(), "$link should contain <body> tag");
     }
 
-
     /**
      * Test that getHelpLinks transforms $help_links into the correct format
      */
