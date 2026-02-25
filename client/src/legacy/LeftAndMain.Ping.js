@@ -27,6 +27,7 @@ $.entwine('ss.ping', function($){
     _setupPinging: function() {
       var interval = null;
       var loginPopup = null;
+      var baseUrl = window.ss && window.ss.config && window.ss.config.baseUrl || '/';
 
       var onSessionLost = function(xmlhttp, status) {
         if (xmlhttp.status < 400 && xmlhttp.responseText != 0) {
@@ -34,7 +35,7 @@ $.entwine('ss.ping', function($){
         }
         // only open a new window when window doesn't exist or it was previously closed
         if (!loginPopup || loginPopup.closed) {
-          loginPopup = window.open('Security/login');
+          loginPopup = window.open(baseUrl + 'Security/login');
 
           if (!loginPopup) {
             alert('Please enable pop-ups for this site');
@@ -52,7 +53,7 @@ $.entwine('ss.ping', function($){
       // setup pinging for login expiry
       interval = setInterval(function() {
         $.ajax({
-          url: 'Security/ping',
+          url: baseUrl + 'Security/ping',
           global: false,
           type: 'POST',
           complete: onSessionLost
