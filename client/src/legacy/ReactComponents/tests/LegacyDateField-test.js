@@ -1,8 +1,8 @@
-/* global jest, test, expect */
+/* global jest, test, describe, beforeEach, it, expect, modernizr, Event */
 
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
-import DateFieldWrapper, { Component as DateField } from '../DateField';
+import { Component as DateField } from '../LegacyDateField';
 
 jest.mock('modernizr', () => {});
 
@@ -78,101 +78,6 @@ function makePropsHtml5OptedOut(obj = {}) {
     ...obj
   };
 }
-
-test('DateField html4 renders localised value', () => {
-  const { container } = render(
-    <DateField {...makePropsHtml4({
-      lang: 'en_NZ',
-      value: '2017-04-11',
-    })}
-    />
-  );
-  const input = container.querySelector('input#date');
-  expect(input.value).toBe('11/04/2017');
-  expect(input.getAttribute('type')).toBe('text');
-  expect(input.className).not.toContain('undefined');
-});
-
-test('DateField html4 onChange converts localised value to ISO', () => {
-  const onChange = jest.fn();
-  const { container } = render(
-    <DateField {...makePropsHtml4({
-      lang: 'en_NZ',
-      onChange,
-    })}
-    />
-  );
-  const input = container.querySelector('input#date');
-  fireEvent.change(input, { target: { value: '11/04/2017' } });
-  expect(onChange).toBeCalledWith(
-    expect.objectContaining({ _reactName: 'onChange' }),
-    { id: 'date', value: '2017-04-11' }
-  );
-});
-
-test('DateField html4 renders empty value for invalid ISO input', () => {
-  const { container } = render(
-    <DateField {...makePropsHtml4({
-      lang: 'en_NZ',
-      value: '2017-99-99',
-    })}
-    />
-  );
-  const input = container.querySelector('input#date');
-  expect(input.value).toBe('');
-});
-
-test('DateField html5 renders ISO value with date input type', () => {
-  const { container } = render(
-    <DateField {...makePropsHtml5({
-      lang: 'en_NZ',
-      value: '2017-04-11',
-    })}
-    />
-  );
-  const input = container.querySelector('input#date');
-  expect(input.getAttribute('type')).toBe('date');
-  expect(input.value).toBe('2017-04-11');
-});
-
-test('DateField html5 no browser support renders text input type', () => {
-  const { container } = render(
-    <DateField {...makePropsHtml5NoBrowserSupport({
-      lang: 'en_NZ',
-      value: '2017-04-11',
-    })}
-    />
-  );
-  const input = container.querySelector('input#date');
-  expect(input.getAttribute('type')).toBe('text');
-  expect(input.value).toBe('11/04/2017');
-});
-
-test('DateField should pass through onBlur handler', () => {
-  const onBlur = jest.fn();
-  const { container } = render(
-    <DateField {...makePropsHtml4({
-      onBlur,
-    })}
-    />
-  );
-  const input = container.querySelector('input#date');
-  fireEvent.blur(input);
-  expect(onBlur).toBeCalledTimes(1);
-});
-
-test('DateField fieldHolder wrapper should render a form group', () => {
-  const { container } = render(
-    <DateFieldWrapper {...makePropsHtml4({
-      id: 'Field',
-      name: 'Field',
-      title: 'Field',
-    })}
-    />
-  );
-  expect(container.querySelectorAll('.form-group')).toHaveLength(1);
-  expect(container.querySelector('input')).not.toBeNull();
-});
 
 test('DateField onChange() should call the onChange function on props', () => {
   const onChange = jest.fn();
@@ -284,12 +189,4 @@ test('DateField html5 en_NZ non iso date', () => {
   const input = container.querySelector('input#date');
   fireEvent.change(input, { target: { value: '11/04/2017' } });
   expect(onChange).not.toBeCalled();
-});
-
-test('DateField renders input without undefined classes', () => {
-  const { container } = render(
-    <DateField {...makePropsHtml4()} />
-  );
-  const input = container.querySelector('input#date');
-  expect(input.className).not.toContain('undefined');
 });

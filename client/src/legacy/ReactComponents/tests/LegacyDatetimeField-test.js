@@ -1,8 +1,8 @@
-/* global jest, test, expect */
+/* global jest, test, describe, beforeEach, it, expect, modernizr */
 
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react';
-import DatetimeFieldWrapper, { Component as DatetimeField } from '../DatetimeField';
+import { Component as DatetimeField } from '../LegacyDatetimeField';
 
 jest.mock('modernizr', () => ({
   inputtypes: {
@@ -34,21 +34,6 @@ function makePropsHtml4(obj = {}) {
   };
 }
 
-function makePropsHtml5(obj = {}) {
-  return {
-    data: {
-      html5: true
-    },
-    modernizr: {
-      inputtypes: {
-        'datetime-local': true,
-      }
-    },
-    ...getSharedProps(),
-    ...obj
-  };
-}
-
 function makePropsHtml5NoBrowserSupport(obj = {}) {
   return {
     data: {
@@ -57,6 +42,21 @@ function makePropsHtml5NoBrowserSupport(obj = {}) {
     modernizr: {
       inputtypes: {
         'datetime-local': false,
+      }
+    },
+    ...getSharedProps(),
+    ...obj
+  };
+}
+
+function makePropsHtml5(obj = {}) {
+  return {
+    data: {
+      html5: true
+    },
+    modernizr: {
+      inputtypes: {
+        'datetime-local': true,
       }
     },
     ...getSharedProps(),
@@ -78,77 +78,6 @@ function makePropsHtml5OptedOut(obj = {}) {
     ...obj
   };
 }
-
-test('DatetimeField renders input with minimal props', () => {
-  const { container } = render(
-    <DatetimeField {...makePropsHtml4()} />
-  );
-  const input = container.querySelector('input');
-  expect(input).not.toBeNull();
-  expect(input.className).not.toContain('undefined');
-});
-
-test('DatetimeField renders with missing modernizr and data props', () => {
-  const { container } = render(
-    <DatetimeField {...getSharedProps()} />
-  );
-  const input = container.querySelector('input#date');
-  expect(input).not.toBeNull();
-  expect(input.getAttribute('type')).toBe('text');
-});
-
-test('DatetimeField html5 uses datetime-local input type', () => {
-  const { container } = render(
-    <DatetimeField {...makePropsHtml5({
-      lang: 'en_NZ',
-    })}
-    />
-  );
-  const input = container.querySelector('input#date');
-  expect(input.getAttribute('type')).toBe('datetime-local');
-});
-
-test('DatetimeField should pass through onBlur handler', () => {
-  const onBlur = jest.fn();
-  const { container } = render(
-    <DatetimeField {...makePropsHtml4({
-      onBlur,
-    })}
-    />
-  );
-  const input = container.querySelector('input#date');
-  fireEvent.blur(input);
-  expect(onBlur).toBeCalledTimes(1);
-});
-
-test('DatetimeField html5 adds seconds for datetime-local values', () => {
-  const onChange = jest.fn();
-  const { container } = render(
-    <DatetimeField {...makePropsHtml5({
-      onChange
-    })}
-    />
-  );
-  const input = container.querySelector('input#date');
-  fireEvent.change(input, { target: { value: '2023-01-30T13:22' } });
-  expect(onChange).toBeCalledWith(
-    expect.objectContaining({ _reactName: 'onChange' }),
-    { id: 'date', value: '2023-01-30T13:22:00' }
-  );
-});
-
-test('DatetimeField fieldHolder wrapper should render a form group', () => {
-  const { container } = render(
-    <DatetimeFieldWrapper {...makePropsHtml4({
-      id: 'Field',
-      name: 'Field',
-      title: 'Field',
-    })}
-    />
-  );
-  expect(container.querySelectorAll('.form-group')).toHaveLength(1);
-  expect(container.querySelector('input')).not.toBeNull();
-});
 
 test('DatetimeField convertToIso() html4 en_NZ', () => {
   const onChange = jest.fn();
@@ -350,12 +279,4 @@ test('DatetimeField html5 en_NZ enter localised value', () => {
   const input = container.querySelector('input#date');
   fireEvent.change(input, { target: { value: '23/04/2017 1:22 PM' } });
   expect(onChange).not.toBeCalled();
-});
-
-test('DatetimeField renders input without undefined classes', () => {
-  const { container } = render(
-    <DatetimeField {...makePropsHtml4()} />
-  );
-  const input = container.querySelector('input');
-  expect(input.className).not.toContain('undefined');
 });

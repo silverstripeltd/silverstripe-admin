@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import {
   Input,
   InputGroup,
@@ -7,86 +7,94 @@ import PropTypes from 'prop-types';
 
 import Tip, { tipShape } from 'components/Tip/Tip';
 
-class InputField extends Component {
-  constructor(props) {
-    super(props);
+/**
+ * Fetches the properties for the input field
+ *
+ * @returns {object} properties
+ */
+const getInputProps = (props, handleChangeFn) => {
+  const inputProps = {
+    className: `${props.className || ''} ${props.extraClass || ''}`,
+    id: props.id,
+    name: props.name,
+    disabled: props.disabled,
+    readOnly: props.readOnly,
+    value: props.value || '',
+    placeholder: props.placeholder,
+    autoFocus: props.autoFocus,
+    maxLength: props.data && props.data.maxlength,
+    type: props.type || null,
+    onBlur: props.onBlur,
+    onFocus: props.onFocus
+  };
 
-    this.handleChange = this.handleChange.bind(this);
+  if (props.attributes && !Array.isArray(props.attributes)) {
+    Object.assign(inputProps, props.attributes);
   }
 
-  /**
-   * Fetches the properties for the input field
-   *
-   * @returns {object} properties
-   */
-  getInputProps() {
-    const props = {
-      className: `${this.props.className} ${this.props.extraClass}`,
-      id: this.props.id,
-      name: this.props.name,
-      disabled: this.props.disabled,
-      readOnly: this.props.readOnly,
-      value: this.props.value || '',
-      placeholder: this.props.placeholder,
-      autoFocus: this.props.autoFocus,
-      maxLength: this.props.data && this.props.data.maxlength,
-      type: this.props.type ? this.props.type : null,
-      onBlur: this.props.onBlur,
-      onFocus: this.props.onFocus
-    };
+  if (!props.readOnly) {
+    Object.assign(inputProps, {
+      onChange: (event) => handleChangeFn(props, event),
+    });
+  }
 
-    if (this.props.attributes && !Array.isArray(this.props.attributes)) {
-      Object.assign(props, this.props.attributes);
+  return inputProps;
+};
+
+/**
+ * Handles changes to the input field's value.
+ *
+ * @param {Event} event
+ */
+const handleChange = (props, event) => {
+  if (typeof props.onChange === 'function') {
+    if (!event.target) {
+      return;
     }
-
-    if (!this.props.readOnly) {
-      Object.assign(props, {
-        onChange: this.handleChange,
-      });
-    }
-
-    return props;
+    props.onChange(event, { id: props.id, value: event.target.value });
   }
+};
 
-  /**
-   * Handles changes to the input field's value.
-   *
-   * @param {Event} event
-   */
-  handleChange(event) {
-    if (typeof this.props.onChange === 'function') {
-      if (!event.target) {
-        return;
-      }
-      this.props.onChange(event, { id: this.props.id, value: event.target.value });
-    }
+const renderFieldWithTip = (props, inputProps) => {
+  const { id, title, tip } = props;
+
+  return (
+    <InputGroup>
+      <Input {...inputProps} />
+      <Tip
+        {...tip}
+        fieldTitle={title}
+        id={`${id}-tip`}
+      />
+    </InputGroup>
+  );
+};
+
+const render = (props, inputProps) => {
+  if (props.tip) {
+    return renderFieldWithTip(props, inputProps);
   }
+  return <Input {...inputProps} />;
+};
 
-  renderFieldWithTip() {
-    const { id, title, tip } = this.props;
+const InputField = (_props) => {
+  const defaultProps = {
+    attributes: {},
+    className: '',
+    extraClass: '',
+    type: 'text',
+    value: '',
+  };
 
-    return (
-      <InputGroup>
-        <Input {...this.getInputProps()} />
-        <Tip
-          {...tip}
-          fieldTitle={title}
-          id={`${id}-tip`}
-        />
-      </InputGroup>
-    );
-  }
+  const props = {
+    ...defaultProps,
+    ..._props,
+  };
+  const inputProps = getInputProps(props, handleChange);
+  return render(props, inputProps);
+};
 
-  render() {
-    if (this.props.tip) {
-      return this.renderFieldWithTip();
-    }
-
-    return <Input {...this.getInputProps()} />;
-  }
-}
-
-InputField.propTypes = {
+const inputFieldPropTypes = {
   extraClass: PropTypes.string,
   id: PropTypes.string,
   name: PropTypes.string.isRequired,
@@ -101,17 +109,15 @@ InputField.propTypes = {
   autoFocus: PropTypes.bool,
   attributes: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
   tip: PropTypes.shape(tipShape),
+  title: PropTypes.string,
 };
 
-InputField.defaultProps = {
-  // React considers "undefined" as an uncontrolled component.
-  value: '',
-  extraClass: '',
-  className: '',
-  type: 'text',
-  attributes: {},
-};
+InputField.propTypes = inputFieldPropTypes;
 
 export { InputField as Component };
 
 export default InputField;
+
+// Exported for use other form fields which can override or reuse this logic
+export { getInputProps, handleChange, render };
+export { inputFieldPropTypes as propTypes };
