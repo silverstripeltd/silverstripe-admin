@@ -3,6 +3,8 @@
 namespace SilverStripe\Admin\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use SilverStripe\Admin\CMSProfileController;
+use SilverStripe\Admin\LeftAndMain;
 use SilverStripe\Admin\Tests\SingleRecordAdminTest\TestAdmin;
 use SilverStripe\Admin\Tests\SingleRecordAdminTest\TestRecord;
 use SilverStripe\Dev\SapphireTest;
@@ -113,5 +115,28 @@ class SingleRecordAdminTest extends SapphireTest
         } else {
             $this->assertNull($result);
         }
+    }
+
+    public function testProvidePermissionsSkipsConfiguredClass(): void
+    {
+        CMSProfileController::config()->set('skip_permission_generation', true);
+        $permissions = LeftAndMain::singleton()->providePermissions();
+        $code = CMSProfileController::getRequiredPermissions();
+        if (is_array($code)) {
+            $code = reset($code);
+        }
+        $this->assertArrayNotHasKey($code, $permissions);
+    }
+
+    public function testProvidePermissionsIncludesClassWhenNotSkipped(): void
+    {
+        CMSProfileController::config()->set('skip_permission_generation', false);
+        $permissions = LeftAndMain::singleton()->providePermissions();
+        $code = CMSProfileController::getRequiredPermissions();
+        if (is_array($code)) {
+            $code = reset($code);
+        }
+        $this->assertSame("Access to 'My Profile' section", $permissions[$code]['name']);
+        $this->assertSame('CMS Access', $permissions[$code]['category']);
     }
 }

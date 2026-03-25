@@ -20,6 +20,8 @@ class CMSProfileController extends SingleRecordAdmin
 
     private static $ignore_menuitem = true;
 
+    private static bool $skip_permission_generation = true;
+
     private static bool $restrict_to_single_record = false;
 
     private static bool $allow_new_record = false;
