@@ -78,7 +78,9 @@ function encode(contentType, data) {
  * @return {Object}
  */
 function decode(contentType, text) {
-  switch (contentType) {
+  // Strip parameters (e.g. "; charset=utf-8") from Content-Type for matching
+  const mimeType = contentType ? contentType.split(';')[0].trim() : '';
+  switch (mimeType) {
     case 'application/x-www-form-urlencoded':
       return qs.parse(text);
 
