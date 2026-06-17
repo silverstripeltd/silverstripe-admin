@@ -302,5 +302,22 @@ describe('Backend', () => {
         .catch((e) => expect(e).toBeFalsy())
         .then(done());
     });
+
+    it('should decode a response with a parameterised Content-Type header', () => {
+      const charsetMock = getBackendMock({
+        text: () => Promise.resolve('{"status":"ok"}'),
+        headers: {
+          get: () => 'application/json; charset=utf-8',
+        },
+      });
+      const endpoint = charsetMock.createEndpointFetcher({
+        url: 'http://example.com',
+        method: 'get',
+        responseFormat: 'json',
+      });
+      return endpoint({}).then((data) => {
+        expect(data).toEqual({ status: 'ok' });
+      });
+    });
   });
 });
