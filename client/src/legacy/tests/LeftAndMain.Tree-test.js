@@ -1,7 +1,7 @@
 /* global jest, test, expect */
 
 import $ from 'jquery';
-import { updateRovingTabindex, resetTabindexToCurrentPage } from '../LeftAndMain.Tree';
+import { updateRovingTabindex, resetTabindexToCurrentPage, buildAncestorChain } from '../LeftAndMain.Tree';
 
 // Helper to simulate tree structure
 const setupTreeDOM = (html) => {
@@ -274,4 +274,50 @@ test('Tree container element exists for focus styling', () => {
   const $tree = $('.cms-tree');
   expect($tree.length).toBe(1);
   expect($tree.hasClass('cms-tree')).toBe(true);
+});
+
+test('buildAncestorChain stops at the nearest already-loaded ancestor', () => {
+  // record 3's parents are 3 -> 2 -> 1, and 1 is already loaded in the tree
+  const loaded = new Set([1]);
+  const parents = { 3: 2, 2: 1, 1: 0 };
+  return buildAncestorChain(
+    3,
+    (id) => loaded.has(id),
+    (id) => Promise.resolve(parents[id])
+  ).then((chain) => {
+    expect(chain).toEqual([1, 2, 3]);
+  });
+});
+
+test('buildAncestorChain walks to the top when no ancestor is loaded', () => {
+  const parents = { 5: 4, 4: 0 };
+  return buildAncestorChain(
+    5,
+    () => false,
+    (id) => Promise.resolve(parents[id])
+  ).then((chain) => {
+    expect(chain).toEqual([4, 5]);
+  });
+});
+
+test('buildAncestorChain returns just the record when it is top-level', () => {
+  return buildAncestorChain(
+    7,
+    () => false,
+    () => Promise.resolve(0)
+  ).then((chain) => {
+    expect(chain).toEqual([7]);
+  });
+});
+
+test('buildAncestorChain makes no server calls when the record is already loaded', () => {
+  let fetched = 0;
+  return buildAncestorChain(
+    9,
+    () => true,
+    () => { fetched += 1; return Promise.resolve(0); }
+  ).then((chain) => {
+    expect(chain).toEqual([9]);
+    expect(fetched).toBe(0);
+  });
 });

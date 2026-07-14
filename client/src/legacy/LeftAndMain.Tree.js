@@ -37,6 +37,38 @@ const resetTabindexToCurrentPage = ($tree) => {
   }
 };
 
+/**
+ * Build the chain of node IDs from the nearest already-loaded ancestor (or the top
+ * of the tree) down to the given record, so the tree can be opened level by level.
+ *
+ * Dependency-injected (no jstree / entwine) so it can be unit tested:
+ *  - isLoaded(id) -> bool: whether the node is already present in the tree.
+ *  - fetchParentID(id) -> Promise<int>: the node's ParentID (0 when top-level/unknown).
+ *
+ * Resolves to [nearestLoadedAncestor, ..., recordID]. The caller prepends the root
+ * and opens each level top-down.
+ *
+ * @param {int} recordID
+ * @param {function} isLoaded
+ * @param {function} fetchParentID
+ * @returns {Promise<Array<int>>}
+ */
+const buildAncestorChain = (recordID, isLoaded, fetchParentID) => {
+  const walk = (id, chain) => {
+    chain.unshift(id);
+    if (isLoaded(id)) {
+      return Promise.resolve(chain);
+    }
+    return fetchParentID(id).then((parentID) => {
+      if (!parentID) {
+        return chain;
+      }
+      return walk(parentID, chain);
+    });
+  };
+  return walk(recordID, []);
+};
+
 // this conditional check is so that we can unit test the functions above in this file without needing to
 // load in jquery.entwine
 if (typeof $.entwine === 'function') {
@@ -605,6 +637,11 @@ if (typeof $.entwine === 'function') {
 
       var treenodesUrl = this.data('urlUpdatetreenodes');
 
+      // Whether a node is already present in the loaded tree.
+      var isLoaded = function(id) {
+        return self.getNodeByID(id).length > 0;
+      };
+
       // Resolve a single node's ParentID from the server.
       var fetchParentID = function(id) {
         var url = treenodesUrl + (treenodesUrl.indexOf('?') === -1 ? '?' : '&') + 'ids=' + id;
@@ -614,22 +651,7 @@ if (typeof $.entwine === 'function') {
         });
       };
 
-      // Walk up from the record, collecting ancestor IDs, until one already loaded
-      // in the tree (or the root) is reached. Resolves to [ancestor, ..., recordID].
-      var buildChain = function(id, chain) {
-        chain.unshift(id);
-        if(self.getNodeByID(id).length) {
-          return $.Deferred().resolve(chain).promise();
-        }
-        return fetchParentID(id).then(function(parentID) {
-          if(!parentID) {
-            return chain;
-          }
-          return buildChain(parentID, chain);
-        });
-      };
-
-      buildChain(recordID, []).then(function(chain) {
+      buildAncestorChain(recordID, isLoaded, fetchParentID).then(function(chain) {
         // Prepend the root so lazy-loaded levels are guaranteed to be present.
         chain.unshift(0);
 
@@ -802,4 +824,4 @@ if (typeof $.entwine === 'function') {
   });
 }
 
-export { updateRovingTabindex, resetTabindexToCurrentPage };
+export { updateRovingTabindex, resetTabindexToCurrentPage, buildAncestorChain };
