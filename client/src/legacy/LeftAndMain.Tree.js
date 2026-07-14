@@ -568,15 +568,98 @@ if (typeof $.entwine === 'function') {
           this.jstree('deselect_all');
           this.jstree('select_node', node);
         } else {
-          // If form is showing an ID that doesn't exist in the tree,
-          // get it from the server
-          this.updateNodesFromServer([id]);
+          // The record isn't in the loaded tree yet - this happens when the CMS is
+          // opened deep-linked to a record whose ancestors haven't been ajax-loaded
+          // (e.g. following the front-end SilverStripeNavigator "edit" link). Open the
+          // tree down to it rather than reloading the root, which never reveals the
+          // record's path.
+          this.openTreeToRecord(id);
         }
       } else {
         // If no ID exists in a form view, we're displaying the tree on its own,
         // hence to page should show as active
         this.jstree('deselect_all');
       }
+    },
+
+    /**
+     * Expands the tree down to a record that isn't loaded yet, then selects it.
+     *
+     * The record's ancestor chain is discovered by asking the server for each
+     * node's ParentID (via the updatetreenodes endpoint) until a node already
+     * present in the tree - or the root - is reached. Each ancestor is then opened
+     * top-down with open_node, which lazy-loads its children and fires the supplied
+     * callback once loaded, so the next level can be opened in turn.
+     *
+     * Records that are hidden from the tree (e.g. Lumberjack-managed children or
+     * pages with show_in_sitetree = false) never appear even once their parent is
+     * loaded; in that case the deepest visible ancestor is selected instead.
+     *
+     * Parameters:
+     *  (Int|String) ID of the record to reveal
+     */
+    openTreeToRecord: function(recordID) {
+      var self = this;
+      recordID = parseInt(recordID, 10);
+      if(!recordID) return;
+
+      var treenodesUrl = this.data('urlUpdatetreenodes');
+
+      // Resolve a single node's ParentID from the server.
+      var fetchParentID = function(id) {
+        var url = treenodesUrl + (treenodesUrl.indexOf('?') === -1 ? '?' : '&') + 'ids=' + id;
+        return $.getJSON(url).then(function(data) {
+          var nodeData = data ? data[id] : null;
+          return nodeData ? parseInt(nodeData.ParentID, 10) : 0;
+        });
+      };
+
+      // Walk up from the record, collecting ancestor IDs, until one already loaded
+      // in the tree (or the root) is reached. Resolves to [ancestor, ..., recordID].
+      var buildChain = function(id, chain) {
+        chain.unshift(id);
+        if(self.getNodeByID(id).length) {
+          return $.Deferred().resolve(chain).promise();
+        }
+        return fetchParentID(id).then(function(parentID) {
+          if(!parentID) {
+            return chain;
+          }
+          return buildChain(parentID, chain);
+        });
+      };
+
+      buildChain(recordID, []).then(function(chain) {
+        // Prepend the root so lazy-loaded levels are guaranteed to be present.
+        chain.unshift(0);
+
+        var openStep = function(i) {
+          var node = self.getNodeByID(chain[i]);
+
+          // Expected level missing - the record (or an ancestor) is hidden from the
+          // tree. Select the deepest visible node we reached.
+          if(!node.length) {
+            var lastVisible = i > 0 ? self.getNodeByID(chain[i - 1]) : $();
+            if(lastVisible.length) {
+              self.jstree('deselect_all');
+              self.jstree('select_node', lastVisible);
+            }
+            return;
+          }
+
+          if(i === chain.length - 1) {
+            self.jstree('deselect_all');
+            self.jstree('select_node', node);
+            return;
+          }
+
+          self.jstree('open_node', node, function() {
+            openStep(i + 1);
+          });
+        };
+
+        openStep(0);
+      });
     },
 
     /**
