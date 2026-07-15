@@ -38,20 +38,13 @@ const resetTabindexToCurrentPage = ($tree) => {
 };
 
 /**
- * Build the chain of node IDs from the nearest already-loaded ancestor (or the top
- * of the tree) down to the given record, so the tree can be opened level by level.
- *
- * Dependency-injected (no jstree / entwine) so it can be unit tested:
- *  - isLoaded(id) -> bool: whether the node is already present in the tree.
- *  - fetchParentID(id) -> Promise<int>: the node's ParentID (0 when top-level/unknown).
- *
- * Resolves to [nearestLoadedAncestor, ..., recordID]. The caller prepends the root
- * and opens each level top-down.
+ * Build the node-ID chain from the nearest already-loaded ancestor (or the top of
+ * the tree) down to the record. Dependency-injected so it can be unit tested.
  *
  * @param {int} recordID
- * @param {function} isLoaded
- * @param {function} fetchParentID
- * @returns {Promise<Array<int>>}
+ * @param {function} isLoaded - (id) => bool: is the node already in the tree?
+ * @param {function} fetchParentID - (id) => Promise<int>: the node's ParentID (0 if top-level)
+ * @returns {Promise<Array<int>>} [nearestLoadedAncestor, ..., recordID]
  */
 const buildAncestorChain = (recordID, isLoaded, fetchParentID) => {
   const walk = (id, chain) => {
@@ -600,11 +593,8 @@ if (typeof $.entwine === 'function') {
           this.jstree('deselect_all');
           this.jstree('select_node', node);
         } else {
-          // The record isn't in the loaded tree yet - this happens when the CMS is
-          // opened deep-linked to a record whose ancestors haven't been ajax-loaded
-          // (e.g. following the front-end SilverStripeNavigator "edit" link). Open the
-          // tree down to it rather than reloading the root, which never reveals the
-          // record's path.
+          // Not in the loaded tree yet (e.g. deep-linked via the front-end
+          // navigator); open the tree down to it rather than reloading the root.
           this.openTreeToRecord(id);
         }
       } else {
@@ -615,20 +605,12 @@ if (typeof $.entwine === 'function') {
     },
 
     /**
-     * Expands the tree down to a record that isn't loaded yet, then selects it.
+     * Open the tree down to a not-yet-loaded record and select it - or the nearest
+     * visible ancestor for records hidden from the tree (e.g. Lumberjack children or
+     * show_in_sitetree = false). Ancestors are opened top-down with open_node, which
+     * lazy-loads each level and fires its callback when done.
      *
-     * The record's ancestor chain is discovered by asking the server for each
-     * node's ParentID (via the updatetreenodes endpoint) until a node already
-     * present in the tree - or the root - is reached. Each ancestor is then opened
-     * top-down with open_node, which lazy-loads its children and fires the supplied
-     * callback once loaded, so the next level can be opened in turn.
-     *
-     * Records that are hidden from the tree (e.g. Lumberjack-managed children or
-     * pages with show_in_sitetree = false) never appear even once their parent is
-     * loaded; in that case the deepest visible ancestor is selected instead.
-     *
-     * Parameters:
-     *  (Int|String) ID of the record to reveal
+     * @param {int|string} recordID
      */
     openTreeToRecord: function(recordID) {
       var self = this;
