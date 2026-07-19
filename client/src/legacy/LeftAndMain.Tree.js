@@ -637,16 +637,33 @@ if (typeof $.entwine === 'function') {
         // Prepend the root so lazy-loaded levels are guaranteed to be present.
         chain.unshift(0);
 
+        // Levels already splice-attempted, so a still-missing node falls through to
+        // the visible-ancestor fallback rather than looping.
+        var splicedLevels = {};
+
         var openStep = function(i) {
           var node = self.getNodeByID(chain[i]);
 
-          // Expected level missing - the record (or an ancestor) is hidden from the
-          // tree. Select the deepest visible node we reached.
           if(!node.length) {
-            var lastVisible = i > 0 ? self.getNodeByID(chain[i - 1]) : $();
-            if(lastVisible.length) {
+            var parent = i > 0 ? self.getNodeByID(chain[i - 1]) : $();
+
+            // Parent is loaded but didn't render this child - typically because it
+            // exceeds node_threshold_total and shows a "too many records" placeholder.
+            // Splice the child in from the server once, then retry this level.
+            if(parent.length && !splicedLevels[i]) {
+              splicedLevels[i] = true;
+              self.spliceNodeIntoParent(chain[i], function() {
+                openStep(i);
+              });
+              return;
+            }
+
+            // Still missing - splice failed, or the record is genuinely hidden from
+            // the tree (Lumberjack child, show_in_sitetree = false). Select the
+            // deepest visible node we reached.
+            if(parent.length) {
               self.jstree('deselect_all');
-              self.jstree('select_node', lastVisible);
+              self.jstree('select_node', parent);
             }
             return;
           }
@@ -664,6 +681,32 @@ if (typeof $.entwine === 'function') {
 
         openStep(0);
       });
+    },
+
+    /**
+     * Reveal a single record whose parent is loaded but is showing a "too many
+     * records" placeholder instead of its children (the parent exceeds
+     * node_threshold_total). Fetches the node from the updatetreenodes endpoint and
+     * inserts it under its parent via createNode(); the placeholder and its
+     * "show as list" link are left in place for the remaining children. Invokes the
+     * callback once the node is in the tree, or on failure.
+     *
+     * Parameters:
+     *  (int|string) recordID
+     *  (Function) callback
+     */
+    spliceNodeIntoParent: function(recordID, callback) {
+      var self = this;
+      var url = $.path.addSearchParams(this.data('urlUpdatetreenodes'), 'ids=' + recordID);
+
+      $.getJSON(url).then(function(data) {
+        var nodeData = data ? data[recordID] : null;
+        if(nodeData && nodeData.html && !self.getNodeByID(recordID).length) {
+          self.createNode(nodeData.html, nodeData, callback);
+        } else {
+          callback();
+        }
+      }, callback);
     },
 
     /**
